@@ -1,0 +1,154 @@
+<?php
+
+/**
+ * @file
+ * This file contains all install related hooks for Islandora CWRC Credit Visualization
+ */
+
+/**
+ * Implements hook_uninstall().
+ */
+//function islandora_cwrc_credit_visualization_uninstall() {
+//}
+
+/**
+ * Implements hook_requirements().
+ */
+/*function islandora_plotit_requirements() {
+
+  if (!libraries_get_path('CWRC-Mapping-Timelines-Project')) {
+    $t = get_t();
+    $readme_link = l(
+      $t('README'),
+      drupal_get_path('module', 'islandora_plotit') . '/README.md'
+    );
+    return array(
+      'plotit' => array(
+        'title' => $t('PlotIt'),
+        'description' => $t(
+          'PlotIt is missing, please consult the !readme for installation instructions.',
+          array('!readme' => $readme_link)
+        ),
+        'severity' => REQUIREMENT_ERROR,
+      ),
+    );
+  }
+}
+*/
+
+/**
+ * Implements hook_schema().
+ */
+
+function islandora_cwrc_credit_visualization_schema() {
+
+  $schema['islandora_cwrc_credit_viz_collectionstore'] = array(
+    'description' => 'Table that stores CWRC Credit Visualization collection.',
+    'fields' => array(
+      'object_pid' => array(
+        'type' => 'varchar',
+        'length' => '64',
+        'not null' => TRUE,
+        'description' => 'The PID of the Object.',
+      ),
+      'member_collection_pid' => array(
+        'type' => 'varchar',
+        'length' => '64',
+        'not null' => TRUE,
+        'description' => 'The collection PID that the Object is a member of.',
+      ),
+    ),
+    'indexes' => array(
+      'cv_collection_object_pid_index' => array('object_pid'),
+      'cv_collection_pid_index' => array('member_collection_pid'),
+    ),
+    'primary_key' => array('object_id'),
+  );
+
+  $schema['islandora_cwrc_credit_viz_datastore'] = array(
+    'description' => 'Table that stores CWRC Credit Visualization datastore.',
+    'fields' => array(
+      'workflow_id' => array(
+        'type' => 'varchar',
+        'length' => '256',
+        'not null' => TRUE,
+        'description' => 'The Workflow ID of the Object.',
+      ),
+      'object_pid' => array(
+        'type' => 'varchar',
+        'length' => '64',
+        'not null' => TRUE,
+        'description' => 'The PID of the Object.',
+      ),
+      'object_label' => array(
+        'type' => 'text',
+        'size' => 'tiny',
+        'not null' => TRUE,
+        'description' => 'The Label of the Object.',
+      ),
+      'user_id' => array(
+        'type' => 'varchar',
+        'length' => '64',
+        'not null' => TRUE,
+        'description' => 'The user_id stored in the workflow record.',
+      ),
+      'user_name' => array(
+        'type' => 'text',
+        'size' => 'tiny',
+        'not null' => FALSE,
+        'description' => 'The user\'s human readible name.',
+      ),
+      'user_uri' => array(
+        'type' => 'text',
+        'size' => 'tiny',
+        'not null' => FALSE,
+        'description' => 'The user\'s URI.',
+      ),
+      'wf_date' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'description' => 'The date of the workflow activity.',
+      ),
+      'wf_time' => array(
+        'type' => 'varchar',
+        'length' => 32,
+        'not null' => TRUE,
+        'description' => 'The time of the workflow activity.',
+      ),
+      'wf_category' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The human readable category of the workflow.',
+      ),
+      'wf_stamp' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The human readable name of the stamp.',
+      ),
+      'wf_status' => array(
+        'type' => 'varchar',
+        'length' => 255,
+        'not null' => TRUE,
+        'description' => 'The status of the workflow category/stamp.',
+      ),
+      'delta_by_size' => array(
+        'type' => 'int',
+        'size' => 'big',
+        'not null' => FALSE,
+        'description' => 'The change (absolute value) in size of the doc made during this workflow activity.',
+      ),
+    ),
+    'indexes' => array(
+      'cv_user_id_index' => array('user_id'),
+      'cv_pid_index' => array('object_pid'),
+    ),
+    'primary_key' => array('workflow_id'),
+  );
+
+  return $schema;
+ 
+}
+

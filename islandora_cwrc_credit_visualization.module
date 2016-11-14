@@ -1,0 +1,28 @@
+<?php
+/**
+ * @file
+ * Main hook implementations for islandora_plotit.
+ */
+
+/**
+ * Implements hook_menu().
+ */
+function islandora_plotit_menu() {
+  $items = array();
+
+  // CWRC Credit Visualization - 
+  $items['services/credit_viz'] = array(
+    'title' => 'CWRC Credit Visualization JSON',
+    'page callback' => 'islandora_plotit_cwrc_credit_viz_api',
+    // 'access callback' => 1,
+    // 'access arguments' => array('access content'),
+    'access callback' => 'user_is_logged_in',  
+    'file' => 'includes/credit_viz_helpers.inc',
+    'type' => MENU_CALLBACK,
+  );
+
+  return $items;
+}
+
+
+
