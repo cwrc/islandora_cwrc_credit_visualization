@@ -19,7 +19,7 @@ define('ISLANDORA_CWRC_CREDIT_VIZ_REQ_USER', 'userId');
  * prepare the JSON output for the credit visualization tool
  *
  */
-function islandora_plotit_cwrc_credit_viz_api()
+function islandora_cwrc_credit_visualization_api()
 {
   $req = $_REQUEST;
   $ret = null;
@@ -148,7 +148,7 @@ function islandora_plotit_cwrc_credit_viz_api()
 /**
  * process the workflow datastream for one doc 
  */
-function islandora_plotit_cwrc_viz_one_PID($pid)
+function islandora_cwrc_viz_one_PID($pid)
 {
 
   $fedora_object = islandora_object_load($pid);
@@ -225,9 +225,9 @@ function islandora_plotit_cwrc_viz_one_PID($pid)
       );
     }
 
-    islandora_plotit_cwrc_viz_update_delta($fedora_object, $wfDocArray);
-    islandora_plotit_cwrc_viz_update_datastore($pid, $wfDocArray);
-    islandora_plotit_cwrc_viz_update_collectionstore($pid, $collectionArray);
+    islandora_cwrc_viz_update_delta($fedora_object, $wfDocArray);
+    islandora_cwrc_viz_update_datastore($pid, $wfDocArray);
+    islandora_cwrc_viz_update_collectionstore($pid, $collectionArray);
   }
 }
 
@@ -236,7 +236,7 @@ function islandora_plotit_cwrc_viz_one_PID($pid)
  * assumes sorted input
  *
  */
-function islandora_plotit_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
+function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
 {
   /*
   for ($i=0; $i < count($wfDocArray); $i++)
@@ -304,7 +304,7 @@ function islandora_plotit_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
     if ($wfIter <= 0 and $verIter < count($datastream))
     {
       //ran out of the wf items so accumulate on first workflow activity
-      $deltaSize = islandora_plotit_cwrc_viz_delta_versions_by_size($datastream,$verIter);
+      $deltaSize = islandora_cwrc_viz_delta_versions_by_size($datastream,$verIter);
       //$wfDocArray[0]['delta_by_size'] = $wfDocArray[0]['delta_by_size'] + $datastream[$verIter]->size; 
       $wfDocArray[0]['delta_by_size'] = $wfDocArray[0]['delta_by_size'] + $deltaSize; 
       $verIter++;
@@ -367,7 +367,7 @@ function islandora_plotit_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
 /**
  * delta current and previous version
  */
-function islandora_plotit_cwrc_viz_delta_versions_by_size($datastream, $currentVersion)
+function islandora_cwrc_viz_delta_versions_by_size($datastream, $currentVersion)
 {
   $delta = 0;
 
@@ -391,7 +391,7 @@ function islandora_plotit_cwrc_viz_delta_versions_by_size($datastream, $currentV
 /**
  * add workflow content to the datastore
  */
-function islandora_plotit_cwrc_viz_update_datastore($pid, $wfDocArray)
+function islandora_cwrc_viz_update_datastore($pid, $wfDocArray)
 {
 
   // ToDo: 2016-11-09 only add new workflow instead of the crude delete
@@ -425,7 +425,7 @@ function islandora_plotit_cwrc_viz_update_datastore($pid, $wfDocArray)
 /**
  * add workflow content to the collection store
  */
-function islandora_plotit_cwrc_viz_update_collectionstore($pid, $collectionArray)
+function islandora_cwrc_viz_update_collectionstore($pid, $collectionArray)
 {
   // ToDo: 2016-11-09 only add new workflow instead of the crude delete
   // Collection store as an object may belong to multiple collections

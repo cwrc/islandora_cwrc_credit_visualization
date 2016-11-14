@@ -7,13 +7,13 @@
 /**
  * Implements hook_menu().
  */
-function islandora_plotit_menu() {
+function islandora_cwrc_credit_visualization_menu() {
   $items = array();
 
   // CWRC Credit Visualization - 
   $items['services/credit_viz'] = array(
     'title' => 'CWRC Credit Visualization JSON',
-    'page callback' => 'islandora_plotit_cwrc_credit_viz_api',
+    'page callback' => 'islandora_cwrc_credit_visualization_api',
     // 'access callback' => 1,
     // 'access arguments' => array('access content'),
     'access callback' => 'user_is_logged_in',  
