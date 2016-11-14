@@ -26,3 +26,35 @@ function islandora_cwrc_credit_visualization_menu() {
 
 
 
+/**
+* Implements hook_block_info().
+*/
+function islandora_cwrc_credit_visualization_block_info() {
+  $blocks = array();
+  $blocks['cwrc_credit_visualization_block'] = array(
+    'info' => t('CWRC Credit Visualization'),
+  );
+
+  return $blocks;
+}
+
+/**
+* Implements hook_block_view().
+*/
+function islandora_cwrc_credit_visualization_block_view($delta = '') {
+  $block = array();
+
+  switch ($delta) {
+    case 'cwrc_credit_visualization_block':
+      $block['subject'] = '';
+      $block['content'] = _islandora_cwrc_credit_visualization_test_content();
+      break;
+  }
+
+  return $block;
+}
+
+function _islandora_cwrc_credit_visualization_test_content() {
+  $output = t('Hello world');
+  return $output;
+}
