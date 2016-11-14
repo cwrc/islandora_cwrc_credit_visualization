@@ -13,7 +13,7 @@ function islandora_cwrc_credit_visualization_drush_command()
  
   $items = array();
  
-  $items['islandora_cwrc_credit_viz_datastore'] = array(
+  $items['islandora_cwrc_credit_visualization_datastore'] = array(
     'description' => 'Initialize datastore for the CWRC Credit Visualization',
     'examples' => array(
       'drush islandora_cwrc_credit_viz_datastore'
@@ -29,7 +29,7 @@ function islandora_cwrc_credit_visualization_drush_command()
  * Credit Visualization: bootstrap or manually update datastore
  *
  */
-function drush_islandora_cwrc_credit_viz_datastore()
+function drush_islandora_cwrc_credit_visualization_datastore()
 {
   try
   {

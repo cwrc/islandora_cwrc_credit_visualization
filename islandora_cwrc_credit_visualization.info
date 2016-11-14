@@ -1,7 +1,7 @@
-name = Islandora CWRC Credit Visualization 
+name = Islandora CWRC Credit Visualization
 description = 'Provides API and theme for the CWRC Credit Visualization tool.'
-dependencies[] = cwrc_workflow 
+dependencies[] = islandora_workflow_rest
 dependencies[] = libraries
 core = 7.x
-package = Islandora CWRC 
+package = Islandora CWRC
 version = 7.x-dev
