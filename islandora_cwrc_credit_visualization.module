@@ -28,7 +28,8 @@ function islandora_cwrc_credit_visualization_menu() {
 
 /**
 * Implements hook_block_info().
-*/
+ */
+/*
 function islandora_cwrc_credit_visualization_block_info() {
   $blocks = array();
   $blocks['cwrc_credit_visualization_block'] = array(
@@ -37,10 +38,12 @@ function islandora_cwrc_credit_visualization_block_info() {
 
   return $blocks;
 }
+ */
 
 /**
 * Implements hook_block_view().
-*/
+ */
+/*
 function islandora_cwrc_credit_visualization_block_view($delta = '') {
   $block = array();
 
@@ -58,3 +61,4 @@ function _islandora_cwrc_credit_visualization_test_content() {
   $output = t('Hello world');
   return $output;
 }
+ */
