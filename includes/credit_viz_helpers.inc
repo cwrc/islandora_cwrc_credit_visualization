@@ -225,7 +225,10 @@ function islandora_cwrc_viz_one_PID($pid)
       );
     }
 
-    islandora_cwrc_viz_update_delta($fedora_object, $wfDocArray);
+    if (count($wfDocArray)>0)
+    {
+      islandora_cwrc_viz_update_delta($fedora_object, $wfDocArray);
+    }
     islandora_cwrc_viz_update_datastore($pid, $wfDocArray);
     islandora_cwrc_viz_update_collectionstore($pid, $collectionArray);
   }
@@ -413,12 +416,16 @@ function islandora_cwrc_viz_update_datastore($pid, $wfDocArray)
     , 'delta_by_size'
 
   );
-  $query = db_insert(ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE)->fields($fields);
-  foreach ($wfDocArray as $item)
+
+  if (count($wfDocArray)>0)
   {
-    $query->values($item);
+    $query = db_insert(ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE)->fields($fields);
+    foreach ($wfDocArray as $item)
+    {
+      $query->values($item);
+    }
+    $query->execute();
   }
-  $query->execute();
 }
 
 
@@ -435,8 +442,11 @@ function islandora_cwrc_viz_update_collectionstore($pid, $collectionArray)
     'object_pid'
     ,'member_collection_pid'
   );
-  $query = db_insert(ISLANDORA_CWRC_CREDIT_VIZ_COLLECTSTORE)->fields($fields);
-  $query->values($collectionArray);
-  $query->execute();
+  if (count($wfDocArray)>0)
+  {
+    $query = db_insert(ISLANDORA_CWRC_CREDIT_VIZ_COLLECTSTORE)->fields($fields);
+    $query->values($collectionArray);
+    $query->execute();
+  }
 }
 
