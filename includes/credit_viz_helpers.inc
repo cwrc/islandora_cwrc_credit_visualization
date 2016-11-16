@@ -325,7 +325,7 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
       $nextWFDate =  $wfDocArray[$wfIter-1]['wf_date'];
       if (strtotime($nextWFDate) < strtotime($verDate))
       {
-        $deltaSize = islandora_ploti_cwrc_viz_delta_versions_by_size($datastream,$verIter);
+        $deltaSize = islandora_plot_cwrc_viz_delta_versions_by_size($datastream,$verIter);
         //$wfDocArray[$wfIter]['delta_by_size'] = $wfDocArray[$wfIter]['delta_by_size'] + $datastream[$verIter]->size; 
         $wfDocArray[$wfIter]['delta_by_size'] = $wfDocArray[$wfIter]['delta_by_size'] + $deltaSize; 
         $verIter++;
