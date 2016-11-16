@@ -29,6 +29,14 @@ function islandora_cwrc_credit_visualization_drush_command()
     'bootstrap' => DRUSH_BOOTSTRAP_MAX
   );
 
+  $items['islandora_cwrc_credit_visualization_datastore_by_date'] = array(
+    'description' => 'Initialize datastore for the CWRC Credit Visualization',
+    'examples' => array(
+      'drush islandora_cwrc_credit_visualization_datastore_by_date'
+    ),
+    'bootstrap' => DRUSH_BOOTSTRAP_MAX
+  );
+
   return $items;
 }
  
@@ -90,3 +98,47 @@ EOQ;
   }
 
 }
+
+/**
+ * Credit Visualization: bootstrap datastore
+ *
+ */
+function drush_islandora_cwrc_credit_visualization_datastore_by_date()
+{
+
+  $startDate = "2016-10-10T15:29:21.374Z";
+
+  $query = <<<EOQ
+    SELECT ?pid                                                            
+    FROM <#ri>
+    WHERE {
+      ?pid <fedora-view:lastModifiedDate> ?modified ;
+      <fedora-model:hasModel> <info:fedora/fedora-system:FedoraObject-3.0>;
+      FILTER (
+        ?modified > '$startDate'^^<xml-schema:dateTime>
+      )
+    }
+EOQ;
+
+  drush_print($query);
+
+  try
+  { 
+    module_load_include('inc', 'islandora_cwrc_credit_visualization', 'includes/credit_viz_helpers');
+
+    $connection = islandora_get_tuque_connection();
+    $results = $connection->repository->ri->sparqlQuery($query);                
+    foreach ($results as $result) 
+    {          
+      // $documents[] = $result['pid']['value'];
+      drush_print($result['pid']['value']);
+      //islandora_cwrc_viz_one_PID($result['pid']['value']);
+    }                                        
+  } 
+  catch (Exception $e) {
+     // print exception
+     print $e->getMessage();
+  }
+
+}
+
