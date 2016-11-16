@@ -33,16 +33,9 @@ function drush_islandora_cwrc_credit_visualization_datastore($pid)
 {
   try
   {
-
     module_load_include('inc', 'islandora_cwrc_credit_visualization', 'includes/credit_viz_helpers');
 
     drush_print("results:");
-    islandora_cwrc_viz_one_PID($pid);
-
-    $pid = "cwrc:8d235859-a651-435b-b152-f034ba1a22c7";
-    islandora_cwrc_viz_one_PID($pid);
-    
-    $pid = "cwrc:7b25e22c-e8aa-4c16-8de4-3c6ecd84f72d";
     islandora_cwrc_viz_one_PID($pid);
 
   } catch (Exception $e) {
