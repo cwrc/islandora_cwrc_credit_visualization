@@ -422,7 +422,14 @@ function islandora_cwrc_viz_update_datastore($pid, $wfDocArray)
     $query = db_insert(ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE)->fields($fields);
     foreach ($wfDocArray as $item)
     {
-      $query->values($item);
+      if ($item['wf_category'])
+      {
+        $query->values($item);
+      }
+      else 
+      {
+        print('invalid workflow: ' . $item['object_pid']);
+      }
     }
     $query->execute();
   }
