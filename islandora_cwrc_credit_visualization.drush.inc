@@ -16,7 +16,7 @@ function islandora_cwrc_credit_visualization_drush_command()
   $items['islandora_cwrc_credit_visualization_datastore'] = array(
     'description' => 'Initialize datastore for the CWRC Credit Visualization',
     'examples' => array(
-      'drush islandora_cwrc_credit_visualization_datastore {pid}'
+      'drush -u 1 islandora_cwrc_credit_visualization_datastore {pid}'
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_MAX
   );
@@ -24,7 +24,7 @@ function islandora_cwrc_credit_visualization_drush_command()
   $items['islandora_cwrc_credit_visualization_datastore_bootstrap'] = array(
     'description' => 'Initialize datastore for the CWRC Credit Visualization',
     'examples' => array(
-      'drush islandora_cwrc_credit_visualization_datastore_bootstrap'
+      'drush -u 1 islandora_cwrc_credit_visualization_datastore_bootstrap'
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_MAX
   );
@@ -32,7 +32,7 @@ function islandora_cwrc_credit_visualization_drush_command()
   $items['islandora_cwrc_credit_visualization_datastore_by_date'] = array(
     'description' => 'Initialize datastore for the CWRC Credit Visualization',
     'examples' => array(
-      'drush islandora_cwrc_credit_visualization_datastore_by_date'
+      'drush -u 1 islandora_cwrc_credit_visualization_datastore_by_date'
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_MAX
   );
@@ -51,7 +51,7 @@ function drush_islandora_cwrc_credit_visualization_datastore($pid)
   {
     module_load_include('inc', 'islandora_cwrc_credit_visualization', 'includes/credit_viz_helpers');
 
-    drush_print("results:");
+    //drush_print("results:");
     islandora_cwrc_viz_one_PID($pid);
 
   } catch (Exception $e) {
