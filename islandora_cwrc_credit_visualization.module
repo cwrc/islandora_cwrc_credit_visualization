@@ -38,9 +38,14 @@ function islandora_cwrc_credit_visualization_cwrc_visualization_info() {
   $tools = array();     
                         
   $tools['cwrc_credit_visualization'] = array(
-      'label' => 'Credit',
+      'label' => 'Credits',
       'available cmodels' => array(
         'islandora:collectionCModel',
+        'cwrc:documentCModel',
+        'cwrc:citationCModel',
+        'ir:citationCModel',
+        'cwrc:person-entityCModel',
+        'cwrc:organization-entityCModel',
       ),                
       //'url pattern' => $base_url.'/islandora/object/%object_pid%/plotit_xmldb',
       'url pattern' => 'http://cwrc-cv.tenjin.ca/',
