@@ -175,10 +175,12 @@ function islandora_cwrc_viz_one_PID($pid)
       }
 
       $wfTmpArray['workflow_id'] = $wfID; 
+      // fedora object properties
       $wfTmpArray['object_pid'] = $fedora_object->id;
       $wfTmpArray['object_label'] = $fedora_object->label;
+      //user id
       $wfTmpArray['user_id'] = $wfNode->getAttribute("userID"); 
-      //ToDo: read from Drupal
+      // get users human readible name
       $tmpUser = user_load_by_name($wfNode->getAttribute("userID"));
       if (module_exists('realname') and $tmpUser)
       {
@@ -191,7 +193,7 @@ function islandora_cwrc_viz_one_PID($pid)
       
       $wfTmpArray['user_uri'] =  '';
 
-      // ToDo: what timezone is used
+      // ToDo: what timezone is used in legacy data/times
       //$wfTmpArray['wf_time'] = $wfNode->getAttribute("time"); 
       //$wfTmpArray['wf_date'] = $wfNode->getAttribute("date");
       //if ($wfTmpArray['wf_time'])
@@ -225,9 +227,9 @@ function islandora_cwrc_viz_one_PID($pid)
         $wfTmpArray['wf_timestamp'] = $tmpDateObj->format('c');
       }
 
+
       // should only have one activity node
       $wfActivityNode = $xpath->query('activity',$wfNode)->item(0);
-
       if ($wfActivityNode)
       {
         $wfTmpArray['wf_category'] = $wfActivityNode->getAttribute("category"); 
