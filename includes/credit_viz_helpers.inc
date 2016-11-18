@@ -152,7 +152,7 @@ function islandora_cwrc_viz_one_PID($pid)
 {
 
   $fedora_object = islandora_object_load($pid);
-  drush_print($fedora_object->id);
+  //drush_print($fedora_object->id);
 
   $wfDS = $fedora_object[ISLANDORA_CWRC_CREDIT_VIZ_WORKFLOW];
 
