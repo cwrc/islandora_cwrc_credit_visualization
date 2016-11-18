@@ -336,7 +336,7 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
     {
       //don't use last workflow activity in this condition
       // there is another workflow activity closer to ds version's date/time  
-      $nextWFDate =  $wfDocArray[$wfIter-1]['wf_timpstamp'];
+      $nextWFDate =  $wfDocArray[$wfIter-1]['wf_timestamp'];
       if (strtotime($nextWFDate) < strtotime($verDate))
       {
         $deltaSize = islandora_cwrc_viz_delta_versions_by_size($datastream,$verIter);
