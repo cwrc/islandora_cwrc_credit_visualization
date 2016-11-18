@@ -43,7 +43,7 @@ function islandora_cwrc_credit_visualization_api()
 
     // all workflow from the specified documents the specified collection 
     // needs sorting for version difference calculation
-    $query_result = db_query("SELECT * FROM {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE object_pid IN (:pids) ORDER BY object_pid, workflow_id, wf_timestamp, wf_date, wf_time ",
+    $query_result = db_query("SELECT * FROM {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE object_pid IN (:pids) ORDER BY object_pid, wf_timestamp, workflow_id ",
       array(':pids' => $pidArray)
     );
   }
@@ -67,7 +67,7 @@ function islandora_cwrc_credit_visualization_api()
     $query_result = db_query(
       "SELECT ds.* "
       . "FROM {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} ds, {".ISLANDORA_CWRC_CREDIT_VIZ_COLLECTSTORE."} cs "
-      . " WHERE cs.object_pid=ds.object_pid and cs.member_collection_pid IN (:pids) ORDER BY object_pid, workflow_id, wf_timestamp, wf_date, wf_time",
+      . " WHERE cs.object_pid=ds.object_pid and cs.member_collection_pid IN (:pids) ORDER BY object_pid, wf_timestamp, workflow_id ",
       array(':pids' => $pidArray)
     );
   }
@@ -89,7 +89,7 @@ function islandora_cwrc_credit_visualization_api()
 
     // all workflow from documents touched by the specified users
     // needs sorting for version difference calculation
-    $query_result = db_query("SELECT * FROM {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE object_pid IN (SELECT object_pid FROM  {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE user_id IN (:user_ids) ) ORDER BY object_pid, workflow_id, wf_timestamp, wf_date, wf_time ",
+    $query_result = db_query("SELECT * FROM {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE object_pid IN (SELECT object_pid FROM  {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE user_id IN (:user_ids) ) ORDER BY object_pid, wf_timestamp, workflow_id ",
       array(':user_ids' => $tmpArray)
     );
 
@@ -190,26 +190,33 @@ function islandora_cwrc_viz_one_PID($pid)
       $wfTmpArray['user_uri'] =  '';
 
       // ToDo: what timezone is used
-      $wfTmpArray['wf_time'] = $wfNode->getAttribute("time"); 
-      $wfTmpArray['wf_date'] = $wfNode->getAttribute("date");
-      if ($wfTmpArray['wf_time'])
-      {
-        $wfTmpArray['wf_date'] .= 'T'.$wfTmpArray['wf_time'];
-      }
-      $tmpT = new DateTime($wfTmpArray['wf_date'], new DateTimeZone('UTC') );
-      $wfTmpArray['wf_date'] = $tmpT->format('c');
+      //$wfTmpArray['wf_time'] = $wfNode->getAttribute("time"); 
+      //$wfTmpArray['wf_date'] = $wfNode->getAttribute("date");
+      //if ($wfTmpArray['wf_time'])
+      //{
+      //  $wfTmpArray['wf_date'] .= 'T'.$wfTmpArray['wf_time'];
+      //}
+      //$tmpT = new DateTime($wfTmpArray['wf_date'], new DateTimeZone('UTC') );
+      //$wfTmpArray['wf_date'] = $tmpT->format('c');
 
       $tmpDateTime = $wfNode->getAttribute("timestamp");
       if ($tmpDateTime)
       {
-        //$wfTmpArray['wf_timestamp'] = substr($tmpDateTime, 0,26);
+        // newstyle workflow circa 2016-12-01
         $wfTmpArray['wf_timestamp'] = $tmpDateTime;
       }
       else
       {
         // handle old legacy workflow without the timezone and precision
         // likely before 2016-12-01
-        $wfTmpArray['wf_timestamp'] = $wfTmpArray['wf_date'];
+        $tmpLegacyDate = $wfNode->getAttribute("date"); 
+        $tmpLegacyTemp = $wfNode->getAttribute("time"); 
+        if ($tmpLegacyTime)
+        {
+          $tmpLegacyDate .= 'T'.$tmpLegacyTime;
+        }
+        $tmpDateObj = new DateTime($tmpLegacyDate, new DateTimeZone('UTC') );
+        $wfTmpArray['wf_timestamp'] = $tmpDateObj->format('c');
       }
 
       // should only have one activity node
@@ -425,8 +432,6 @@ function islandora_cwrc_viz_update_datastore($pid, $wfDocArray)
     , 'user_id'
     , 'user_name'
     , 'user_uri'
-    , 'wf_date'
-    , 'wf_time'
     , 'wf_timestamp'
     , 'wf_category'
     , 'wf_stamp'

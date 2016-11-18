@@ -104,18 +104,6 @@ function islandora_cwrc_credit_visualization_schema() {
         'not null' => FALSE,
         'description' => 'The user\'s URI.',
       ),
-      'wf_date' => array(
-        'type' => 'varchar',
-        'length' => 32,
-        'not null' => TRUE,
-        'description' => 'The date of the workflow activity.',
-      ),
-      'wf_time' => array(
-        'type' => 'varchar',
-        'length' => 32,
-        'not null' => FALSE,
-        'description' => 'The time of the workflow activity.',
-      ),
       'wf_timestamp' => array(
         'type' => 'varchar',
         //'mysql_type' => 'datetime',
