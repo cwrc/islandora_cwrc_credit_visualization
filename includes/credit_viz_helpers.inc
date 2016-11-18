@@ -196,6 +196,9 @@ function islandora_cwrc_viz_one_PID($pid)
       {
         $wfTmpArray['wf_date'] .= 'T'.$wfTmpArray['wf_time'];
       }
+      $tmpT = new DateTime($wfTmpArray['wf_date'], new DateTimeZone('UTC') );
+      $wfTmpArray['wf_date'] = $tmpT->format('c');
+
       $tmpDateTime = $wfNode->getAttribute("timestamp");
       if ($tmpDateTime)
       {
@@ -230,7 +233,7 @@ function islandora_cwrc_viz_one_PID($pid)
         //$result['attributes'][$attr->name] = $attr->value;
       //}
     }
-
+var_dump($wfDocArray);
     $parents = $fedora_object->getParents();
     $collectionArray = null;
     foreach ($parents as $collectionId)
