@@ -233,7 +233,7 @@ function islandora_cwrc_viz_one_PID($pid)
         //$result['attributes'][$attr->name] = $attr->value;
       //}
     }
-var_dump($wfDocArray);
+
     $parents = $fedora_object->getParents();
     $collectionArray = null;
     foreach ($parents as $collectionId)
