@@ -43,7 +43,7 @@ function islandora_cwrc_credit_visualization_api()
 
     // all workflow from the specified documents the specified collection 
     // needs sorting for version difference calculation
-    $query_result = db_query("SELECT * FROM {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE object_pid IN (:pids) ORDER BY object_pid, wf_date, wf_time, workflow_id ",
+    $query_result = db_query("SELECT * FROM {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE object_pid IN (:pids) ORDER BY object_pid, workflow_id, wf_timestamp, wf_date, wf_time ",
       array(':pids' => $pidArray)
     );
   }
@@ -67,7 +67,7 @@ function islandora_cwrc_credit_visualization_api()
     $query_result = db_query(
       "SELECT ds.* "
       . "FROM {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} ds, {".ISLANDORA_CWRC_CREDIT_VIZ_COLLECTSTORE."} cs "
-      . " WHERE cs.object_pid=ds.object_pid and cs.member_collection_pid IN (:pids) ORDER BY object_pid, wf_date, wf_time, workflow_id ",
+      . " WHERE cs.object_pid=ds.object_pid and cs.member_collection_pid IN (:pids) ORDER BY object_pid, workflow_id, wf_timestamp, wf_date, wf_time",
       array(':pids' => $pidArray)
     );
   }
@@ -89,7 +89,7 @@ function islandora_cwrc_credit_visualization_api()
 
     // all workflow from documents touched by the specified users
     // needs sorting for version difference calculation
-    $query_result = db_query("SELECT * FROM {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE object_pid IN (SELECT object_pid FROM  {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE user_id IN (:user_ids) ) ORDER BY object_pid, wf_date, wf_time, workflow_id ",
+    $query_result = db_query("SELECT * FROM {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE object_pid IN (SELECT object_pid FROM  {".ISLANDORA_CWRC_CREDIT_VIZ_DATASTORE."} WHERE user_id IN (:user_ids) ) ORDER BY object_pid, workflow_id, wf_timestamp, wf_date, wf_time ",
       array(':user_ids' => $tmpArray)
     );
 
@@ -190,8 +190,24 @@ function islandora_cwrc_viz_one_PID($pid)
       $wfTmpArray['user_uri'] =  '';
 
       // ToDo: what timezone is used
-      $wfTmpArray['wf_date'] = $wfNode->getAttribute("date"). ' ' . $wfNode->getAttribute("time"); 
       $wfTmpArray['wf_time'] = $wfNode->getAttribute("time"); 
+      $wfTmpArray['wf_date'] = $wfNode->getAttribute("date");
+      if ($wfTmpArray['wf_time'])
+      {
+        $wfTmpArray['wf_date'] .= 'T'.$wfTmpArray['wf_time'];
+      }
+      $tmpDateTime = $wfNode->getAttribute("timestamp");
+      if ($tmpDateTime)
+      {
+        //$wfTmpArray['wf_timestamp'] = substr($tmpDateTime, 0,26);
+        $wfTmpArray['wf_timestamp'] = $tmpDateTime;
+      }
+      else
+      {
+        // handle old legacy workflow without the timezone and precision
+        // likely before 2016-12-01
+        $wfTmpArray['wf_timestamp'] = $wfTmpArray['wf_date'];
+      }
 
       // should only have one activity node
       $wfActivityNode = $xpath->query('activity',$wfNode)->item(0);
@@ -224,7 +240,6 @@ function islandora_cwrc_viz_one_PID($pid)
         'member_collection_id' => $collectionId
       );
     }
-
     if (count($wfDocArray)>0)
     {
       islandora_cwrc_viz_update_delta($fedora_object, $wfDocArray);
@@ -300,9 +315,8 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
   do {
     //var_dump($datastream[$verIter]->size);
 
-    $wfDate = $wfDocArray[$wfIter]['wf_date'];
+    $wfDate = $wfDocArray[$wfIter]['wf_timestamp'];
     $verDate = $datastream[$verIter]->createdDate;
-
 
     if ($wfIter <= 0 and $verIter < count($datastream))
     {
@@ -322,7 +336,7 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
     {
       //don't use last workflow activity in this condition
       // there is another workflow activity closer to ds version's date/time  
-      $nextWFDate =  $wfDocArray[$wfIter-1]['wf_date'];
+      $nextWFDate =  $wfDocArray[$wfIter-1]['wf_timpstamp'];
       if (strtotime($nextWFDate) < strtotime($verDate))
       {
         $deltaSize = islandora_cwrc_viz_delta_versions_by_size($datastream,$verIter);
@@ -410,6 +424,7 @@ function islandora_cwrc_viz_update_datastore($pid, $wfDocArray)
     , 'user_uri'
     , 'wf_date'
     , 'wf_time'
+    , 'wf_timestamp'
     , 'wf_category'
     , 'wf_stamp'
     , 'wf_status'
