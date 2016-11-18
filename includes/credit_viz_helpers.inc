@@ -179,7 +179,16 @@ function islandora_cwrc_viz_one_PID($pid)
       $wfTmpArray['object_label'] = $fedora_object->label;
       $wfTmpArray['user_id'] = $wfNode->getAttribute("userID"); 
       //ToDo: read from Drupal
-      $wfTmpArray['user_name'] = $wfNode->getAttribute("userID"); 
+      $tmpUser = user_load_by_name($wfNode->getAttribute("userID"));
+      if (module_exists('realname') and $tmpUser)
+      {
+        $wfTmpArray['user_name'] = $tmpUser->realname; 
+      }
+      else
+      {
+        $wfTmpArray['user_name'] = $wfNode->getAttribute("userID"); 
+      }
+      
       $wfTmpArray['user_uri'] =  '';
 
       // ToDo: what timezone is used
@@ -237,7 +246,7 @@ function islandora_cwrc_viz_one_PID($pid)
         //$result['attributes'][$attr->name] = $attr->value;
       //}
     }
-var_dump($wfDocArray);
+
     $parents = $fedora_object->getParents();
     $collectionArray = null;
     foreach ($parents as $collectionId)
