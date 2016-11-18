@@ -140,9 +140,7 @@ function islandora_cwrc_credit_visualization_api()
 
   $ret['documents'] = $docArray;
 
-  //print(json_encode($ret));
   drupal_json_output($ret);
-
 }
 
 /**
@@ -152,17 +150,13 @@ function islandora_cwrc_viz_one_PID($pid)
 {
 
   $fedora_object = islandora_object_load($pid);
-  //drush_print($fedora_object->id);
 
   $wfDS = $fedora_object[ISLANDORA_CWRC_CREDIT_VIZ_WORKFLOW];
-
-  //drush_print($wfDS->content);
 
   if ($wfDS->content)
   {
     $wfObj = new DOMDocument();
     $wfObj->loadXML($wfDS->content);
-    //print($wfObj->saveXML());
     $xpath = new DOMXPath($wfObj);
     //$xpath->registerNamespace("php", "http://php.net/xpath");
     //$xpath->registerPhpFunctions();
@@ -183,7 +177,6 @@ function islandora_cwrc_viz_one_PID($pid)
       $wfTmpArray['workflow_id'] = $wfID; 
       $wfTmpArray['object_pid'] = $fedora_object->id;
       $wfTmpArray['object_label'] = $fedora_object->label;
-      //$wfTmpArray['collection_id'] = json_encode($fedora_object->getParents()); 
       $wfTmpArray['user_id'] = $wfNode->getAttribute("userID"); 
       //ToDo: read from Drupal
       $wfTmpArray['user_name'] = $wfNode->getAttribute("userID"); 
@@ -207,15 +200,19 @@ function islandora_cwrc_viz_one_PID($pid)
       }
       else
       {
+        // ToDo: what timezone is used
         // handle old legacy workflow without the timezone and precision
         // likely before 2016-12-01
         $tmpLegacyDate = $wfNode->getAttribute("date"); 
-        $tmpLegacyTemp = $wfNode->getAttribute("time"); 
+        $tmpLegacyTime = $wfNode->getAttribute("time"); 
         if ($tmpLegacyTime)
         {
           $tmpLegacyDate .= 'T'.$tmpLegacyTime;
         }
-        $tmpDateObj = new DateTime($tmpLegacyDate, new DateTimeZone('UTC') );
+        // get legacy date/time in the default, hopefully correct, timezone
+        $tmpDateObj = new DateTime($tmpLegacyDate, new DateTimeZone(date_default_timezone_get()) );
+        // convert to UTC
+        $tmpDateObj->setTimezone(new DateTimeZone('UTC'));
         $wfTmpArray['wf_timestamp'] = $tmpDateObj->format('c');
       }
 
@@ -240,7 +237,7 @@ function islandora_cwrc_viz_one_PID($pid)
         //$result['attributes'][$attr->name] = $attr->value;
       //}
     }
-
+var_dump($wfDocArray);
     $parents = $fedora_object->getParents();
     $collectionArray = null;
     foreach ($parents as $collectionId)
@@ -304,22 +301,12 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
     }
   }
 
-    //var_dump($datastream->content);
-    //var_dump($datastream->createdDate);
-
-  //print("asdf" . $verIter);
-  //if ($verIter == 1) print_r($datastream[1]->createdDate);
-  //if ($verIter == 1) print_r($datastream[1]->size);
-
-
   $wfIter = count($wfDocArray) - 1;
   $verIter = 0;
   
   // assume sorted by date/time
   // traverse both arrays matching workflow activities with Fedora datastream
   // versions
-
- //var_dump($wfDocArray); 
 
   // ToDo: time zone - maybe change workflow schema to include timezone info? 
   do {
@@ -332,7 +319,6 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
     {
       //ran out of the wf items so accumulate on first workflow activity
       $deltaSize = islandora_cwrc_viz_delta_versions_by_size($datastream,$verIter);
-      //$wfDocArray[0]['delta_by_size'] = $wfDocArray[0]['delta_by_size'] + $datastream[$verIter]->size; 
       $wfDocArray[0]['delta_by_size'] = $wfDocArray[0]['delta_by_size'] + $deltaSize; 
       $verIter++;
     }
@@ -350,7 +336,6 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
       if (strtotime($nextWFDate) < strtotime($verDate))
       {
         $deltaSize = islandora_cwrc_viz_delta_versions_by_size($datastream,$verIter);
-        //$wfDocArray[$wfIter]['delta_by_size'] = $wfDocArray[$wfIter]['delta_by_size'] + $datastream[$verIter]->size; 
         $wfDocArray[$wfIter]['delta_by_size'] = $wfDocArray[$wfIter]['delta_by_size'] + $deltaSize; 
         $verIter++;
         $wfIter--;
@@ -360,8 +345,6 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
         $wfDocArray[$wfIter]['delta_by_size'] = 0; 
         $wfIter--;
       }
-      //print("a:".$wfDate."b:".$verDate."\n");
-      //print("a:".strtotime($wfDate)."b:".strtotime($verDate)."\n");
     }
     else if ($wfDate < $verDate and $wfIter > 0)
     {
@@ -373,22 +356,9 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
       $wfIter--;
       $verIter++;
     }
-    
-   // print("a:".$wfIter."b:".$verIter."\n");
 
   } while ($wfIter >= 0 or $verIter < count($datastream));
 
-
-  //var_dump($wfDocArray);
-
-  /*
-  foreach ($wfDocArray as $item)
-  {
-    $item['delta_by_size'] = rand(0, 10000);
-    print_r($item);
-    print_r($wfDocArray);
-  }
-   */
 }
 
 /**
