@@ -25,6 +25,35 @@ function islandora_cwrc_credit_visualization_menu() {
 }
 
 
+/**                     
+ * Implements hook_cwrc_visualization_info().
+ *                      
+ * Does so on behalf of the credit visualization module, the only visualization tool available
+ * as of yet.           
+ * */                   
+function islandora_cwrc_credit_visualization_cwrc_visualization_info() {
+                        
+  global $base_url;     
+                        
+  $tools = array();     
+                        
+  $tools['cwrc_credit_visualization'] = array(
+      'label' => 'Credit',
+      'available cmodels' => array(
+        'islandora:collectionCModel',
+      ),                
+      //'url pattern' => $base_url.'/islandora/object/%object_pid%/plotit_xmldb',
+      'url pattern' => 'http://cwrc-cv.tenjin.ca/',
+      'weight' => 30,   
+      //'search display' => 'plotit',
+      //'search hide facets' => true,
+      //'bookmark path' => 'islandora-bookmark/listid/%list_id%/plotit_xmldb_json',
+                        
+    );                  
+                        
+  return $tools;        
+}                    
+
 
 /**
 * Implements hook_block_info().
