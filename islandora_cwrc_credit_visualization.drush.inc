@@ -91,7 +91,7 @@ EOQ;
     {          
       // $documents[] = $result['pid']['value'];
       drush_print($result['pid']['value'] . " " . $result['modified']['value']);
-      //islandora_cwrc_viz_one_PID($result['pid']['value']);
+      islandora_cwrc_viz_one_PID($result['pid']['value']);
     }                                        
   } 
   catch (Exception $e) {
