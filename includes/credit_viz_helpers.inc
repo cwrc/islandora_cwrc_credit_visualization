@@ -349,7 +349,7 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
         $deltaSize = islandora_cwrc_viz_delta_versions_by_size($datastream,$verIter);
         $wfDocArray[$wfIter]['delta_by_size'] = $wfDocArray[$wfIter]['delta_by_size'] + $deltaSize; 
         $verIter++;
-        $wfIter--;
+        //$wfIter--; // might have workflow with before version of datastream
       }
       else
       {
