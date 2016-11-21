@@ -68,14 +68,15 @@ function drush_islandora_cwrc_credit_visualization_datastore($pid)
 function drush_islandora_cwrc_credit_visualization_datastore_bootstrap()
 {
 
+  // order by modified date to allow restarting is process crashes
   $query = <<<EOQ
-    SELECT ?pid
+    SELECT ?pid ?modified
     FROM <#ri>
     WHERE {
       ?pid <fedora-view:lastModifiedDate> ?modified ;
       <fedora-model:hasModel> <info:fedora/fedora-system:FedoraObject-3.0>;
     }
-    ORDER BY ASC(?modified)
+    ORDER BY ?modified
 EOQ;
 
   drush_print($query);
@@ -89,8 +90,8 @@ EOQ;
     foreach ($results as $result) 
     {          
       // $documents[] = $result['pid']['value'];
-      drush_print($result['pid']['value']);
-      islandora_cwrc_viz_one_PID($result['pid']['value']);
+      drush_print($result['pid']['value'] . " " . $result['modified']['value']);
+      //islandora_cwrc_viz_one_PID($result['pid']['value']);
     }                                        
   } 
   catch (Exception $e) {
@@ -119,7 +120,7 @@ function drush_islandora_cwrc_credit_visualization_datastore_by_date()
         ?modified > '$startDate'^^<xml-schema:dateTime>
       )
     }
-    ORDER BY ASC(?modified)
+    ORDER BY ?modified
 EOQ;
 
   drush_print($query);
