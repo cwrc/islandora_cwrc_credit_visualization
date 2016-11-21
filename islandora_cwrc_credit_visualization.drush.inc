@@ -75,6 +75,7 @@ function drush_islandora_cwrc_credit_visualization_datastore_bootstrap()
       ?pid <fedora-view:lastModifiedDate> ?modified ;
       <fedora-model:hasModel> <info:fedora/fedora-system:FedoraObject-3.0>;
     }
+    ORDER BY ASC(?modified)
 EOQ;
 
   drush_print($query);
@@ -118,6 +119,7 @@ function drush_islandora_cwrc_credit_visualization_datastore_by_date()
         ?modified > '$startDate'^^<xml-schema:dateTime>
       )
     }
+    ORDER BY ASC(?modified)
 EOQ;
 
   drush_print($query);
