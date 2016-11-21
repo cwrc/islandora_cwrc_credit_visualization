@@ -134,7 +134,7 @@ EOQ;
     foreach ($results as $result) 
     {          
       // $documents[] = $result['pid']['value'];
-      drush_print($result['pid']['value']);
+      drush_print($result['pid']['value'] . " " . $result['modified']['value']);
       islandora_cwrc_viz_one_PID($result['pid']['value']);
     }                                        
   } 
