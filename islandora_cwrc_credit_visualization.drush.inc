@@ -32,7 +32,7 @@ function islandora_cwrc_credit_visualization_drush_command()
   $items['islandora_cwrc_credit_visualization_datastore_by_date'] = array(
     'description' => 'Initialize datastore for the CWRC Credit Visualization',
     'examples' => array(
-      'drush -u 1 islandora_cwrc_credit_visualization_datastore_by_date'
+      'drush -u 1 islandora_cwrc_credit_visualization_datastore_by_date "2016-11-12T10:44:27.166Z" '
     ),
     'bootstrap' => DRUSH_BOOTSTRAP_MAX
   );
@@ -105,13 +105,11 @@ EOQ;
  * Credit Visualization: bootstrap datastore
  *
  */
-function drush_islandora_cwrc_credit_visualization_datastore_by_date()
+function drush_islandora_cwrc_credit_visualization_datastore_by_date($startDate = "2016-10-10T15:29:21.374Z")
 {
 
-  $startDate = "2016-10-10T15:29:21.374Z";
-
   $query = <<<EOQ
-    SELECT ?pid                                                            
+    SELECT ?pid ?modified
     FROM <#ri>
     WHERE {
       ?pid <fedora-view:lastModifiedDate> ?modified ;
