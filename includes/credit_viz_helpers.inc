@@ -221,7 +221,15 @@ function islandora_cwrc_viz_one_PID($pid)
           $tmpLegacyDate .= 'T'.$tmpLegacyTime;
         }
         // get legacy date/time in the default, hopefully correct, timezone
-        $tmpDateObj = new DateTime($tmpLegacyDate, new DateTimeZone(date_default_timezone_get()) );
+        $tmpDateObj;
+        if ($tm = $tmpUser->timezone)
+        {
+          $tmpDateObj = new DateTime($tmpLegacyDate, new DateTimeZone($tm) );
+        }
+        else
+        {
+          $tmpDateObj = new DateTime($tmpLegacyDate, new DateTimeZone(date_default_timezone_get()) );
+        }
         // convert to UTC
         $tmpDateObj->setTimezone(new DateTimeZone('UTC'));
         $wfTmpArray['wf_timestamp'] = $tmpDateObj->format('c');
@@ -249,6 +257,7 @@ function islandora_cwrc_viz_one_PID($pid)
       //}
     }
 
+    // update collection information
     $parents = $fedora_object->getParents();
     $collectionArray = null;
     foreach ($parents as $collectionId)
@@ -258,10 +267,14 @@ function islandora_cwrc_viz_one_PID($pid)
         'member_collection_id' => $collectionId
       );
     }
+
+    // get the version delta information
     if (count($wfDocArray)>0)
     {
       islandora_cwrc_viz_update_delta($fedora_object, $wfDocArray);
     }
+
+    // write to database
     islandora_cwrc_viz_update_datastore($pid, $wfDocArray);
     islandora_cwrc_viz_update_collectionstore($pid, $collectionArray);
   }
@@ -321,7 +334,6 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
 
   // ToDo: time zone - maybe change workflow schema to include timezone info? 
   do {
-    //var_dump($datastream[$verIter]->size);
 
     $wfDate = $wfDocArray[$wfIter]['wf_timestamp'];
     $verDate = $datastream[$verIter]->createdDate;
@@ -353,7 +365,6 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
       }
       else
       {
-        $wfDocArray[$wfIter]['delta_by_size'] = 0; 
         $wfIter--;
       }
     }
@@ -367,6 +378,8 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
       $wfIter--;
       $verIter++;
     }
+
+    //drush_print("a" . $wfIter . ' ' . $verIter . ' ' . $wfDocArray[$wfIter]['wf_timestamp'] . ' ' .  $wfDocArray[$wfIter]['delta_by_size']);
 
   } while ($wfIter >= 0 or $verIter < count($datastream));
 
