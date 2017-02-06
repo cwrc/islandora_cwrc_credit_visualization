@@ -130,6 +130,7 @@ function islandora_cwrc_credit_visualization_api()
         $modArray['workflow_changes']['category'] = $row['wf_category'];
         $modArray['workflow_changes']['stamp'] = $row['wf_stamp'];
         $modArray['workflow_changes']['status'] = $row['wf_status'];
+        $modArray['workflow_changes']['timestamp'] = $row['wf_timestamp'];
         $modArray['diff_changes'] = array($row['delta_by_size']);
 
         $detArray['modifications'][] = $modArray;
