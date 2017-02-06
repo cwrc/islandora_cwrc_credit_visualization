@@ -481,7 +481,6 @@ function islandora_cwrc_viz_update_collectionstore($pid, $collectionArray)
         print('invalid collection: ' . $item['object_pid']);
       }
     }
-    $query->values($collectionArray);
     $query->execute();
   }
 }
