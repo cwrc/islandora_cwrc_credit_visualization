@@ -264,8 +264,8 @@ function islandora_cwrc_viz_one_PID($pid)
     foreach ($parents as $collectionId)
     {
       $collectionArray[] = array (
-        'object_id' => $pid, 
-        'member_collection_id' => $collectionId
+        'object_pid' => $pid, 
+        'member_collection_pid' => $collectionId
       );
     }
 
@@ -467,9 +467,20 @@ function islandora_cwrc_viz_update_collectionstore($pid, $collectionArray)
     'object_pid'
     ,'member_collection_pid'
   );
-  if (count($wfDocArray)>0)
+  if (count($collectionArray)>0)
   {
     $query = db_insert(ISLANDORA_CWRC_CREDIT_VIZ_COLLECTSTORE)->fields($fields);
+    foreach ($collectionArray as $item)
+    {
+      if ($item['member_collection_pid'])
+      {
+        $query->values($item);
+      }
+      else
+      {
+        print('invalid collection: ' . $item['object_pid']);
+      }
+    }
     $query->values($collectionArray);
     $query->execute();
   }
