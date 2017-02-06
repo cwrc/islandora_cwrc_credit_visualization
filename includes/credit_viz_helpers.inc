@@ -223,16 +223,23 @@ function islandora_cwrc_viz_one_PID($pid)
         }
         // get legacy date/time in the default, hopefully correct, timezone
         $tmpDateObj;
-        if ($tm = $tmpUser->timezone)
-        {
-          $tmpDateObj = new DateTime($tmpLegacyDate, new DateTimeZone($tm) );
+        try {
+          if ($tm = $tmpUser->timezone)
+          {
+            $tmpDateObj = new DateTime($tmpLegacyDate, new DateTimeZone($tm) );
+          }
+          else
+          {
+            $tmpDateObj = new DateTime($tmpLegacyDate, new DateTimeZone(date_default_timezone_get()) );
+          }
+          // convert to UTC
+          $tmpDateObj->setTimezone(new DateTimeZone('UTC'));
         }
-        else
+        catch (Exception $e)
         {
-          $tmpDateObj = new DateTime($tmpLegacyDate, new DateTimeZone(date_default_timezone_get()) );
+          print($e->getMessage());
+          continue;
         }
-        // convert to UTC
-        $tmpDateObj->setTimezone(new DateTimeZone('UTC'));
         $wfTmpArray['wf_timestamp'] = $tmpDateObj->format('c');
       }
 
