@@ -37,17 +37,17 @@ REQUIREMENTS
 ## API
 ------
 
-### Lookup documents by array PID and return all workflow
+### Lookup documents by an array of PIDs and return all workflow activities
 ---
 
 /services/credit_viz?pid[]=x?pid[]=y
 
-### Lookup documents by array collection PIDs and return all workflow
+### Lookup documents by an array of collection PIDs and return all workflow activities
 ---
 
 /services/credit_viz?collectionId[]=x?collectionId[]=y
 
-### Lookup documents by array user id and return all workflow
+### Lookup documents by an array user ids and return all workflow activities
 ---
 
 /services/credit_viz?userId[]=x?userId[]=y
