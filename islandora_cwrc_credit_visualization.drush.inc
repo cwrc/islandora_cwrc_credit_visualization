@@ -70,11 +70,13 @@ function drush_islandora_cwrc_credit_visualization_datastore_bootstrap()
 
   // order by modified date to allow restarting is process crashes
   $query = <<<EOQ
+    PREFIX fedora-model: <info:fedora/fedora-system:def/model#>
+    PREFIX fedora-view: <info:fedora/fedora-system:def/view#>
     SELECT ?pid ?modified
     FROM <#ri>
     WHERE {
-      ?pid <fedora-view:lastModifiedDate> ?modified ;
-      <fedora-model:hasModel> <info:fedora/fedora-system:FedoraObject-3.0>;
+      ?pid fedora-view:lastModifiedDate ?modified ;
+      fedora-model:hasModel <info:fedora/fedora-system:FedoraObject-3.0>;
     }
     ORDER BY ?modified
 EOQ;
@@ -109,11 +111,13 @@ function drush_islandora_cwrc_credit_visualization_datastore_by_date($startDate 
 {
 
   $query = <<<EOQ
+    PREFIX fedora-model: <info:fedora/fedora-system:def/model#>
+    PREFIX fedora-view: <info:fedora/fedora-system:def/view#>
     SELECT ?pid ?modified
     FROM <#ri>
     WHERE {
-      ?pid <fedora-view:lastModifiedDate> ?modified ;
-      <fedora-model:hasModel> <info:fedora/fedora-system:FedoraObject-3.0>;
+      ?pid fedora-view:lastModifiedDate ?modified ;
+      fedora-model:hasModel <info:fedora/fedora-system:FedoraObject-3.0>;
       FILTER (
         ?modified > '$startDate'^^<xml-schema:dateTime>
       )
