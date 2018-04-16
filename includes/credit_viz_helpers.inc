@@ -344,41 +344,44 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
   do {
 
     $wfDate = $wfDocArray[$wfIter]['wf_timestamp'];
-    $verDate = $datastream[$verIter]->createdDate;
 
     if ($wfIter <= 0 and $verIter < count($datastream))
     {
       //ran out of the wf items so accumulate on first workflow activity
       $deltaSize = islandora_cwrc_viz_delta_versions_by_size($datastream,$verIter);
-      $wfDocArray[0]['delta_by_size'] = $wfDocArray[0]['delta_by_size'] + $deltaSize; 
+      $wfDocArray[0]['delta_by_size'] = $wfDocArray[0]['delta_by_size'] + $deltaSize;
       $verIter++;
     }
     else if ($verIter >= count($datastream) and $wfIter >= 0)
     {
       // ran out of versions therefor delta size is zero
-      //$wfDocArray[$wfIter]['delta_by_size'] = 0; 
+      //$wfDocArray[$wfIter]['delta_by_size'] = 0;
       $wfIter--;
     }
-    else if (strtotime($wfDate) >= strtotime($verDate) and $wfIter >  0)
+    else if ($wfIter >  0)
     {
-      //don't use last workflow activity in this condition
-      // there is another workflow activity closer to ds version's date/time  
-      $nextWFDate =  $wfDocArray[$wfIter-1]['wf_timestamp'];
-      if (strtotime($nextWFDate) < strtotime($verDate))
+      $verDate = $datastream[$verIter]->createdDate;
+      if (strtotime($wfDate) >= strtotime($verDate) and $wfIter >  0)
       {
-        $deltaSize = islandora_cwrc_viz_delta_versions_by_size($datastream,$verIter);
-        $wfDocArray[$wfIter]['delta_by_size'] = $wfDocArray[$wfIter]['delta_by_size'] + $deltaSize; 
+        //don't use last workflow activity in this condition
+        // there is another workflow activity closer to ds version's date/time
+        $nextWFDate =  $wfDocArray[$wfIter-1]['wf_timestamp'];
+        if (strtotime($nextWFDate) < strtotime($verDate))
+        {
+          $deltaSize = islandora_cwrc_viz_delta_versions_by_size($datastream,$verIter);
+          $wfDocArray[$wfIter]['delta_by_size'] = $wfDocArray[$wfIter]['delta_by_size'] + $deltaSize;
+          $verIter++;
+          //$wfIter--; // might have workflow with before version of datastream
+        }
+        else
+        {
+          $wfIter--;
+        }
+      }
+      else if ($wfDate < $verDate and $wfIter > 0)
+      {
         $verIter++;
-        //$wfIter--; // might have workflow with before version of datastream
       }
-      else
-      {
-        $wfIter--;
-      }
-    }
-    else if ($wfDate < $verDate and $wfIter > 0)
-    {
-      $verIter++;
     }
     else
     {
@@ -387,7 +390,7 @@ function islandora_cwrc_viz_update_delta($fedora_object, &$wfDocArray)
       $verIter++;
     }
 
-    //drush_print("a" . $wfIter . ' ' . $verIter . ' ' . $wfDocArray[$wfIter]['wf_timestamp'] . ' ' .  $wfDocArray[$wfIter]['delta_by_size']);
+    //drush_print("a " . $wfIter . ' ' . $verIter . ' ' . $wfDocArray[$wfIter]['wf_timestamp'] . ' ' .  $wfDocArray[$wfIter]['delta_by_size']);
 
   } while ($wfIter >= 0 or $verIter < count($datastream));
 
