@@ -91,7 +91,7 @@ function islandora_cwrc_credit_visualization_library_alter(&$libraries, $module)
     // add the drilldown callback if needed.
     $path = drupal_get_path('module', 'islandora_cwrc_credit_visualization');
     $libraries['charts_highcharts']['js'] = array(
-      array('data' => $path . '/js/chart.js', 'type' => 'file'),
+      array('data' => $path . '/js/highchart_customization.js', 'type' => 'file'),
     );
   }
 }

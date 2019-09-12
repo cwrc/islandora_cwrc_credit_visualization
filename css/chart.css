@@ -22,6 +22,9 @@
 #cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-items-date-range {
   padding: 0 45px 35px;
 }
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers.is-collection .form-item-users {
+  margin-top: 15px;
+}
 #cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-items-date-range > label {
   margin-bottom: 14px;
 }
