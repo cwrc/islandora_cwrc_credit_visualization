@@ -10,13 +10,13 @@
 function islandora_cwrc_credit_visualization_menu() {
   $items = array();
 
-  // CWRC Credit Visualization - 
+  // CWRC Credit Visualization -
   $items['services/credit_viz'] = array(
     'title' => 'CWRC Credit Visualization JSON',
     'page callback' => 'islandora_cwrc_credit_visualization_api',
     // 'access callback' => 1,
     // 'access arguments' => array('access content'),
-    'access callback' => 'user_is_logged_in',  
+    'access callback' => 'user_is_logged_in',
     'file' => 'includes/credit_viz_helpers.inc',
     'type' => MENU_CALLBACK,
   );
@@ -24,41 +24,224 @@ function islandora_cwrc_credit_visualization_menu() {
   return $items;
 }
 
+/**
+ * Implements hook_menu_alter().
+ */
+function islandora_cwrc_credit_visualization_menu_alter(&$items) {
+  if (!empty($items['islandora/object/%islandora_object/view/cwrc_credit_visualization'])) {
+    $credit_item = &$items['islandora/object/%islandora_object/view/cwrc_credit_visualization'];
+    $credit_item['page callback'] = 'drupal_get_form';
+    $credit_item['page arguments'] = array('islandora_cwrc_credit_visualization_highchart_form', 2);
+    $credit_item['file'] = 'includes/highchart.inc';
+    $credit_item['file path'] = drupal_get_path('module', 'islandora_cwrc_credit_visualization');
+  }
+}
 
-/**                     
+/**
  * Implements hook_cwrc_visualization_info().
- *                      
+ *
  * Does so on behalf of the credit visualization module, the only visualization tool available
- * as of yet.           
- * */                   
+ * as of yet.
+ * */
 function islandora_cwrc_credit_visualization_cwrc_visualization_info() {
-                        
-  global $base_url;     
-                        
-  $tools = array();     
-                        
+
+  global $base_url;
+
+  $tools = array();
+
   $tools['cwrc_credit_visualization'] = array(
       'label' => 'Credits',
-      'available cmodels' => array(
-        //'islandora:collectionCModel',
-        //'cwrc:documentCModel',
-        //'cwrc:citationCModel',
-        //'ir:citationCModel',
-        //'cwrc:person-entityCModel',
-        //'cwrc:organization-entityCModel',
-      ),                
-      //'url pattern' => $base_url.'/islandora/object/%object_pid%/plotit_xmldb',
-      'url pattern' => 'http://cwrc-cv.tenjin.ca/',
-      'weight' => 30,   
-      //'search display' => 'plotit',
-      //'search hide facets' => true,
-      //'bookmark path' => 'islandora-bookmark/listid/%list_id%/plotit_xmldb_json',
-                        
-    );                  
-                        
-  return $tools;        
-}                    
+      'available cmodels' => _islandora_cwrc_credit_visualization_available_cmodels(),
+      'url pattern' => $base_url.'/islandora/object/%object_pid%/cwrc_credit_visualization',
+      'weight' => 30,
+      'search display' => 'credit',
+      'search hide facets' => TRUE,
+      'bookmark path' => 'islandora-bookmark/listid/%list_id%/cwrc_credit_visualization',
+    );
 
+  return $tools;
+}
+
+/**
+ * Implements hook_library_alter().
+ */
+function islandora_cwrc_credit_visualization_library_alter(&$libraries, $module) {
+  if ($module === 'charts_highcharts' && isset($libraries['highcharts'])) {
+    $highcharts_info = libraries_detect('highcharts');
+    $modules_path = $highcharts_info['library path'] . '/js/modules';
+    $libraries['highcharts']['js'][] = array(
+      'data' =>  $modules_path . '/drilldown.js',
+      'type' => 'file',
+    );
+    $libraries['highcharts']['js'][] = array(
+      'data' =>  $modules_path . '/exporting.js',
+      'type' => 'file',
+    );
+    $libraries['highcharts']['js'][] = array(
+      'data' => $modules_path . '/export-data.js',
+      'type' => 'file',
+    );
+    $libraries['highcharts']['js'][] = array(
+      'data' =>  $modules_path . '/full-screen.js',
+      'type' => 'file',
+    );
+  }
+  if ($module === 'charts_highcharts' && isset($libraries['charts_highcharts'])) {
+    // Replacing the default chart highcharts javascript file with our own to
+    // add the drilldown callback if needed.
+    $path = drupal_get_path('module', 'islandora_cwrc_credit_visualization');
+    $libraries['charts_highcharts']['js'] = array(
+      array('data' => $path . '/js/chart.js', 'type' => 'file'),
+    );
+  }
+}
+
+/**
+ * Implements hook_chart_CHART_ID_alter() for object_credviz.
+ */
+function islandora_cwrc_credit_visualization_chart_object_credviz_alter(&$chart) {
+  // Adding a class and an id so that our js will know when to add our
+  // drilldown callback and other customizations.
+  $chart['#attributes']['class'][] = 'charts-highchart--object-credviz-drilldown';
+  $chart['#attributes']['id'] = 'charts-highchart--object-credviz-drilldown-wrapper';
+}
+
+/**
+ * Implements hook_chart_definition_CHART_ID_alter() for object_credviz.
+ */
+function islandora_cwrc_credit_visualization_chart_definition_object_credviz_alter(&$definition, $chart) {
+  if ($chart['#is_collection']) {
+    $definition['subtitle']['text'] = t('Click on the columns to view user contribution(s) by document');
+  }
+  $definition['tooltip']['pointFormat'] = '<span style="color:{point.color}">●</span> {series.name} (<b>{point.y}x</b>)<br/>';
+  $categories = _islandora_cwrc_credit_visualization_possible_categories();
+  $categories_by_label = array_flip($categories);
+  foreach ($definition['series'] as &$category) {
+    $category['category_key'] = $categories_by_label[$category['name']];
+  }
+  unset($category);
+
+  if (empty($definition['drilldown'])) {
+    $definition['drilldown'] = array(
+      'allowPointDrilldown' => FALSE,
+      'series' => array(),
+    );
+  }
+}
+
+/**
+ * Get a collection members tree.
+ *
+ * @param string $collection_pid
+ *   The collection pid.
+ *
+ * @return array
+ *   The members.
+ */
+function islandora_cwrc_credit_visualization_get_collection_members_tree($collection_pid) {
+  $members = array();
+  $cmodels = _islandora_cwrc_credit_visualization_available_cmodels();
+  $cmodel_clause = '';
+  foreach ($cmodels as $cmodel) {
+    $cmodel_clause .= !empty($cmodel_clause) ? 'UNION ' : '';
+    $cmodel_clause .= "{ ?object fm:hasModel <info:fedora/$cmodel> . }\n";
+  }
+  $cmodel_clause = substr($cmodel_clause, 0, -1);
+
+  $query = <<<EOQ
+PREFIX fedora-rels-ext: <info:fedora/fedora-system:def/relations-external#>
+PREFIX fm: <info:fedora/fedora-system:def/model#>
+SELECT ?object ?label ?model
+FROM <#ri>
+WHERE {
+  ?object <fedora-model:label> ?label ;
+          <fedora-rels-ext:isMemberOfCollection> <info:fedora/{$collection_pid}> ;
+          <fedora-model:hasModel> ?model .
+  $cmodel_clause
+}
+EOQ;
+
+  $tuque = islandora_get_tuque_connection();
+  $repo = $tuque->repository->ri;
+  $results = $repo->sparqlQuery($query, 'unlimited');
+  if ($results) {
+    // Remove fedora-system:FedoraObject-3.0 associated with the objects
+    $results = array_filter($results, static function($result) {
+      return $result['model']['value'] !== 'fedora-system:FedoraObject-3.0';
+    });
+    $pids = array_values(array_map(static function($result) {
+      return $result['object']['value'];
+    }, $results));
+    $members = array_combine($pids, $results);
+    foreach ($members as $pid => &$member) {
+      $member['is_collection'] = $member['model']['value'] === 'islandora:collectionCModel';
+      if ($member['is_collection']) {
+        $member['is_collection'] = TRUE;
+        $member['children'] = islandora_cwrc_credit_visualization_get_collection_members_tree($pid);
+        // Remove collections with empty children.
+        if (empty($member['children'])) {
+          unset($members[$pid]);
+        }
+      }
+    }
+  }
+
+  return $members;
+}
+
+function islandora_cwrc_credit_visualization_get_collection_tree_document_options($collection_objects) {
+  $options = array();
+  foreach ($collection_objects as $pid => $object) {
+    if ($object['is_collection']) {
+      $options = array_merge($options, islandora_cwrc_credit_visualization_get_collection_tree_document_options($object['children']));
+    }
+    else {
+      $options[$pid] = $object['label']['value'];
+    }
+  }
+  return $options;
+}
+
+/**
+ * Helper function returning the cmodels of objects used in the workflow.
+ *
+ * @return array
+ *   The cmodels.
+ */
+function _islandora_cwrc_credit_visualization_available_cmodels() {
+  return array(
+    'islandora:collectionCModel',
+    'cwrc:documentCModel',
+    'cwrc:citationCModel',
+    'ir:citationCModel',
+    'cwrc:person-entityCModel',
+    'cwrc:place-entityCModel',
+    'cwrc:organization-entityCModel',
+  );
+}
+
+/**
+ * Helper module to returning categories machine name mapped to human readable ones.
+ *
+ * @return array
+ *   The categories
+ */
+function _islandora_cwrc_credit_visualization_possible_categories() {
+  return array(
+    'created' => t('Created'),
+    'deposited' => t('Deposited'),
+    'metadata_contribution' => t('Metadata Contribution'),
+    'content_contribution' => t('Content Contribution'),
+    'checked' => t('Checked'),
+    'machine_processed' => t('Machine processed'),
+    'user_tagged' => t('User Tagged'),
+    'rights_assigned' => t('Rights Assigned'),
+    'published' => t('Published'),
+    'peer_evaluated' => t('Peer Reviewed/Evaluated'),
+    'withdrawn' => t('Withdrawn'),
+    'deleted' => t('Deleted'),
+  );
+}
 
 /**
 * Implements hook_block_info().

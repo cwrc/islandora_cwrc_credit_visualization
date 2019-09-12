@@ -68,9 +68,14 @@ function islandora_cwrc_credit_visualization_schema() {
   $schema['islandora_cwrc_credit_viz_datastore'] = array(
     'description' => 'Table that stores CWRC Credit Visualization datastore.',
     'fields' => array(
+      'did' => array(
+        'description' => 'The primary identifier for a login.',
+        'type' => 'serial',
+        'not null' => TRUE,
+      ),
       'workflow_id' => array(
         'type' => 'varchar',
-        'length' => '256',
+        'length' => '128',
         'not null' => TRUE,
         'description' => 'The Workflow ID of the Object.',
       ),
@@ -141,10 +146,8 @@ function islandora_cwrc_credit_visualization_schema() {
       'cv_user_id_index' => array('user_id'),
       'cv_pid_index' => array('object_pid'),
     ),
-    'primary_key' => array('workflow_id'),
+    'primary key' => array('did', 'workflow_id'),
   );
 
   return $schema;
- 
 }
-

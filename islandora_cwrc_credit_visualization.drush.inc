@@ -1,74 +1,87 @@
-<?php                                                                             
- 
+<?php
+
 /**
  * @file
    Custom CWRC drush scripts.
  */
- 
+
 /**
  * Implements hook_drush_command().
  */
-function islandora_cwrc_credit_visualization_drush_command()
-{
- 
+function islandora_cwrc_credit_visualization_drush_command() {
   $items = array();
- 
+
   $items['islandora_cwrc_credit_visualization_datastore'] = array(
     'description' => 'Initialize datastore for the CWRC Credit Visualization',
     'examples' => array(
-      'drush -u 1 islandora_cwrc_credit_visualization_datastore {pid}'
+      'drush -u 1 islandora_cwrc_credit_visualization_datastore {pid}',
     ),
-    'bootstrap' => DRUSH_BOOTSTRAP_MAX
+    'bootstrap' => DRUSH_BOOTSTRAP_MAX,
   );
- 
+
+  $items['islandora_cwrc_credit_visualization_collection_tree_datastore'] = array(
+    'description' => 'Initialize datastore for the CWRC Credit Visualization',
+    'examples' => array(
+      'drush -u 1 islandora_cwrc_credit_visualization_collection_tree_datastore {collection_pid}',
+    ),
+    'bootstrap' => DRUSH_BOOTSTRAP_MAX,
+  );
+
   $items['islandora_cwrc_credit_visualization_datastore_bootstrap'] = array(
     'description' => 'Initialize datastore for the CWRC Credit Visualization',
     'examples' => array(
-      'drush -u 1 islandora_cwrc_credit_visualization_datastore_bootstrap'
+      'drush -u 1 islandora_cwrc_credit_visualization_datastore_bootstrap',
     ),
-    'bootstrap' => DRUSH_BOOTSTRAP_MAX
+    'bootstrap' => DRUSH_BOOTSTRAP_MAX,
   );
 
   $items['islandora_cwrc_credit_visualization_datastore_by_date'] = array(
     'description' => 'Initialize datastore for the CWRC Credit Visualization',
     'examples' => array(
-      'drush -u 1 islandora_cwrc_credit_visualization_datastore_by_date "2016-11-12T10:44:27.166Z" '
+      'drush -u 1 islandora_cwrc_credit_visualization_datastore_by_date "2016-11-12T10:44:27.166Z" ',
     ),
-    'bootstrap' => DRUSH_BOOTSTRAP_MAX
+    'bootstrap' => DRUSH_BOOTSTRAP_MAX,
   );
 
   return $items;
 }
- 
- 
+
 /**
- * Credit Visualization: update datastore by PID
- *
+ * Credit Visualization: update datastore by PID.
  */
-function drush_islandora_cwrc_credit_visualization_datastore($pid)
-{
-  try
-  {
+function drush_islandora_cwrc_credit_visualization_datastore($pid) {
+  try {
     module_load_include('inc', 'islandora_cwrc_credit_visualization', 'includes/credit_viz_helpers');
 
-    drush_print("islandora_cwrc_viz_one_PID: $pid");
-    islandora_cwrc_viz_one_PID($pid);
-
-  } catch (Exception $e) {
-     // print exception
-     print $e->getMessage();
+    drush_print("islandora_cwrc_viz_one_pid: $pid");
+    islandora_cwrc_viz_one_pid($pid);
+  }
+  catch (Exception $e) {
+    // Print exception.
+    print $e->getMessage();
   }
 }
 
+function drush_islandora_cwrc_credit_visualization_collection_tree_datastore($collection_pid) {
+  $collection = islandora_object_load($collection_pid);
+  if ($collection && !empty($collection->models)) {
+    $cmodels = $collection->models;
+    if (in_array('islandora:collectionCModel', $cmodels, TRUE)) {
+      module_load_include('inc', 'islandora_cwrc_credit_visualization', 'includes/credit_viz_helpers');
+      $tree = islandora_cwrc_credit_visualization_get_collection_members_tree($collection_pid);
+      islandora_cwrc_credit_visualization_update_datastore_by_collection_tree($tree);
+    }
+  }
+  else {
+    drush_log('Unable to load collection object for :' . $collection_pid);
+  }
+}
 
 /**
- * Credit Visualization: bootstrap datastore
- *
+ * Credit Visualization: bootstrap datastore.
  */
-function drush_islandora_cwrc_credit_visualization_datastore_bootstrap()
-{
-
-  // order by modified date to allow restarting is process crashes
+function drush_islandora_cwrc_credit_visualization_datastore_bootstrap() {
+  // Order by modified date to allow restarting is process crashes.
   $query = <<<EOQ
     PREFIX fedora-model: <info:fedora/fedora-system:def/model#>
     PREFIX fedora-view: <info:fedora/fedora-system:def/view#>
@@ -83,33 +96,28 @@ EOQ;
 
   drush_print($query);
 
-  try
-  { 
+  try {
     module_load_include('inc', 'islandora_cwrc_credit_visualization', 'includes/credit_viz_helpers');
 
     $connection = islandora_get_tuque_connection();
-    $results = $connection->repository->ri->sparqlQuery($query);                
-    foreach ($results as $result) 
-    {          
+    $results = $connection->repository->ri->sparqlQuery($query);
+    foreach ($results as $result) {
       // $documents[] = $result['pid']['value'];
       drush_print($result['pid']['value'] . " " . $result['modified']['value']);
-      islandora_cwrc_viz_one_PID($result['pid']['value']);
-    }                                        
-  } 
+      islandora_cwrc_viz_one_pid($result['pid']['value']);
+    }
+  }
   catch (Exception $e) {
-     // print exception
-     print $e->getMessage();
+    // Print exception.
+    print $e->getMessage();
   }
 
 }
 
 /**
- * Credit Visualization: bootstrap datastore
- *
+ * Credit Visualization: bootstrap datastore.
  */
-function drush_islandora_cwrc_credit_visualization_datastore_by_date($startDate = "2016-10-10T15:29:21.374Z")
-{
-
+function drush_islandora_cwrc_credit_visualization_datastore_by_date($startDate = "2016-10-10T15:29:21.374Z") {
   $query = <<<EOQ
     PREFIX fedora-model: <info:fedora/fedora-system:def/model#>
     PREFIX fedora-view: <info:fedora/fedora-system:def/view#>
@@ -127,23 +135,19 @@ EOQ;
 
   drush_print($query);
 
-  try
-  { 
+  try {
     module_load_include('inc', 'islandora_cwrc_credit_visualization', 'includes/credit_viz_helpers');
 
     $connection = islandora_get_tuque_connection();
-    $results = $connection->repository->ri->sparqlQuery($query);                
-    foreach ($results as $result) 
-    {          
+    $results = $connection->repository->ri->sparqlQuery($query);
+    foreach ($results as $result) {
       // $documents[] = $result['pid']['value'];
       drush_print($result['pid']['value'] . " " . $result['modified']['value']);
-      islandora_cwrc_viz_one_PID($result['pid']['value']);
-    }                                        
-  } 
-  catch (Exception $e) {
-     // print exception
-     print $e->getMessage();
+      islandora_cwrc_viz_one_pid($result['pid']['value']);
+    }
   }
-
+  catch (Exception $e) {
+    // Print exception.
+    print $e->getMessage();
+  }
 }
-

@@ -1,0 +1,30 @@
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers,
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers * {
+  -webkit-box-sizing: border-box;
+  box-sizing: border-box;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers {
+  display: grid;
+  grid-template-columns: repeat(2, 50%);
+  grid-gap: 10px;
+  grid-auto-flow: dense;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers.is-collection .form-item-document-pids {
+  grid-row: 1/4;
+  grid-column: 1;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-items-date-range {
+  grid-row: 1;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-actions {
+  grid-column: 1/-1;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-items-date-range {
+  padding: 0 45px 35px;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-items-date-range > label {
+  margin-bottom: 14px;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers > .form-item {
+  margin-bottom: 0;
+}
