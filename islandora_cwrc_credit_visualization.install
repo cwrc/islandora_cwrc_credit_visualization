@@ -39,9 +39,7 @@
 /**
  * Implements hook_schema().
  */
-
 function islandora_cwrc_credit_visualization_schema() {
-
   $schema['islandora_cwrc_credit_viz_collectionstore'] = array(
     'description' => 'Table that stores CWRC Credit Visualization collection.',
     'fields' => array(
@@ -64,7 +62,6 @@ function islandora_cwrc_credit_visualization_schema() {
     ),
     'primary_key' => array('object_id'),
   );
-
   $schema['islandora_cwrc_credit_viz_datastore'] = array(
     'description' => 'Table that stores CWRC Credit Visualization datastore.',
     'fields' => array(

@@ -43,8 +43,14 @@ function islandora_cwrc_credit_visualization_highchart_form(array $form, array &
   if (!_islandora_cwrc_credit_visualization_is_valid_date($date_range)) {
     $date_range = array();
   }
+  // Checking if filters were applied.
+  $filtered = $selected_users && $date_range;
 
   $is_collection = _cwrc_islandora_bagit_object_is_collection_policy($islandora_object);
+  // Updating filtered flag for collections.
+  if ($is_collection && $datastore_param && !$filtered) {
+    $filtered = TRUE;
+  }
   $form['#islandora_object_is_collection'] = $is_collection;
   $query = db_select('islandora_cwrc_credit_viz_datastore', 'ds')
     ->fields('ds');
@@ -96,6 +102,9 @@ function islandora_cwrc_credit_visualization_highchart_form(array $form, array &
       $object_pid = $result->object_pid;
       $object_label = $result->object_label;
       $category = _islandora_cwrc_credit_visualization_possible_category_alias($result->wf_category);
+      if ($category === 'machine_processed') {
+        continue;
+      }
       $wf_date = $result->wf_timestamp;
       $contribution_timestamps[] = $wf_date;
       if ($result_count === 0 && $date_range_min_formatted) {
@@ -170,12 +179,12 @@ function islandora_cwrc_credit_visualization_highchart_form(array $form, array &
     }
   }
 
-  // Sorting ASC user total contributions.
+  // Sorting DESC user total contributions.
   uasort($users_contributions, static function ($usera, $userb) {
     if ($usera['count'] === $userb['count']) {
       return 0;
     }
-    return ($usera['count'] < $userb['count']) ? -1 : 1;
+    return ($usera['count'] > $userb['count']) ? -1 : 1;
   });
   // Extracting the user names.
   $user_names = array_map(static function ($user) {
@@ -195,16 +204,89 @@ function islandora_cwrc_credit_visualization_highchart_form(array $form, array &
 
   $wrapper_id = 'cwrc-islandora-credit-visualization-highchart-wrapper';
   $time_wrapper_id = 'cwrc-islandora-credit-visualization-highchart-as-of-time';
+  // No ui settings.
+  usort($contribution_timestamps, static function ($t1, $t2) {
+    return $t1 - $t2;
+  });
+  $min = array_values($contribution_timestamps)[0];
+  $max = array_values(array_slice($contribution_timestamps, -1))[0];
+  $date_start = $valid_range_min ? $date_range_min_formatted : $min;
+  $date_end = $valid_range_min ? $date_range_max_formatted : $max;
+  $no_ui_slider = array(
+    'placeholder_id' => 'cwrc-islandora-credit-visualization-highchart-filters-no-ui-date-range-slider',
+    'range' => array(
+      'min' => $min,
+      'max' => $max,
+    ),
+    'start' => array(
+      'begin' => $date_start,
+      'end' => $date_end,
+    ),
+  );
+  if ($is_collection && $options && $object_pids) {
+    $options = array_intersect_key($options, $object_pids);
+    $document_pids = array_keys($options);
+    $document_pids = array_combine($document_pids, $document_pids);
+    $document_pids = array_filter($document_pids, static function ($pid) use ($excluded_documents) {
+      return !isset($excluded_documents[$pid]);
+    });
+  }
+  $selected_users_count = $selected_users ? count($selected_users) : count($user_names);
+  $total_users_count = count($user_names);
+
+  $chart_title = t('<span style="font-weight:bold">Credit Visualization</span> of the <span style="font-weight:bold">@label</span> @type (as of <span id="@id">@time</span>)', array(
+    '@label' => $islandora_object->label,
+    '@type' => $is_collection ? 'collection' : 'document',
+    '@id' => $time_wrapper_id,
+    '@time' => gmdate('F d Y, H:i:s \G\M\T'),
+  ));
+  $header = array('', t('Unfiltered values'));
+  $rows = array();
+  $rows[0] = array(
+    array('data' => t('Date range'), 'header' => TRUE),
+    t('@start - @end', array(
+      '@start' => date('m/d/Y', strtotime($min)),
+      '@end' => date('m/d/Y', strtotime($max)),
+    )),
+  );
+  $last_row_count = 1;
+  if ($is_collection && $options && $object_pids) {
+    $last_row_count = 2;
+    $rows[1] = array(
+      array('data' => t('Objects'), 'header' => TRUE),
+      count($options),
+    );
+  }
+  $rows[$last_row_count] = array(
+    array('data' => t('Contributors'), 'header' => TRUE),
+    $total_users_count,
+  );
+  $table_caption = '';
+  if ($filtered) {
+    $header[] = t('Applied Filters*');
+    $rows[0][] = t('@start - @end', array(
+      '@start' => date('m/d/Y', strtotime($date_start)),
+      '@end' => date('m/d/Y', strtotime($date_end)),
+    ));
+    if ($is_collection && $options && $object_pids) {
+      $rows[1][] = $document_pids ? count($document_pids) : count($options);
+    }
+    $rows[$last_row_count][] = $selected_users_count;
+    $table_caption = t('<span style="font-size: 12px;color:#666666;fill:#666666;"><span style="font-weight: bold">*This visualization is filtered</span>. Non-filtered contributors appear only if they contributed to the objects and contribution categories being visualized within the specified time-frame.</span>');
+  }
+
+  $chart_title .=  theme('table', array(
+    'header' => $header,
+    'rows' => $rows,
+    'sticky' => FALSE,
+    'attributes' => array('class' => array('table--chart-title')),
+    'caption' => $table_caption,
+  ));
   $chart = array(
     '#prefix' => '<div id="' . $wrapper_id . '">',
     '#type' => 'chart',
     '#chart_id' => 'object_credviz',
-    '#title' => t('Contributions to <b>@label</b> @type (as of <span id="@id">@time</span>)', array(
-      '@label' => $islandora_object->label,
-      '@type' => $is_collection ? 'collection' : 'document',
-      '@id' => $time_wrapper_id,
-      '@time' => gmdate('F d Y, H:i:s \G\M\T'),
-    )),
+    '#title' => $chart_title,
     '#chart_type' => 'bar',
     '#chart_library' => 'highcharts',
     '#background' => '#FFFFFF',
@@ -223,40 +305,27 @@ function islandora_cwrc_credit_visualization_highchart_form(array $form, array &
 
   // Columns data by user and categories.
   $categories = _islandora_cwrc_credit_visualization_possible_categories();
+  unset($categories['machine_processed']);
   foreach ($categories as $machine_name => $title) {
-    $data = _islandora_cwrc_credit_visualization_get_chart_category_data($machine_name, $users_contributions, $is_collection);
-    $chart[$machine_name] = array(
-      '#type' => 'chart_data',
-      '#title' => $title,
-      '#data' => $data,
-    );
+    if ($machine_name !== 'machine_processed') {
+      $data = _islandora_cwrc_credit_visualization_get_chart_category_data($machine_name, $users_contributions, $is_collection);
+      $chart[$machine_name] = [
+        '#type' => 'chart_data',
+        '#title' => $title,
+        '#data' => $data,
+      ];
+    }
   }
 
   $filters_wrapper_id = 'cwrc-islandora-credit-visualization-highchart-filters-wrappers';
-  // No ui settings.
-  usort($contribution_timestamps, static function ($t1, $t2) {
-    return $t1 - $t2;
-  });
-  $min = array_values($contribution_timestamps)[0];
-  $max = array_values(array_slice($contribution_timestamps, -1))[0];
-
-  $no_ui_slider = array(
-    'placeholder_id' => 'cwrc-islandora-credit-visualization-highchart-filters-no-ui-date-range-slider',
-    'range' => array(
-      'min' => $min,
-      'max' => $max,
-    ),
-    'start' => array(
-      'begin' => $valid_range_min ? $date_range_min_formatted : $min,
-      'end' => $valid_range_min ? $date_range_max_formatted : $max,
-    ),
-  );
   $js_settings[$module_name] = array(
     'workflow_contributions' => $users_contributions,
     'workflow_contributors' => $user_names,
+    'workflow_selected_contributors_count' => $selected_users_count,
+    'workflow_contributors_count' => $total_users_count,
     'workflow_categories' => $categories,
-    'rotate_xaxis_labels' => count($user_names) > 15,
     'time_wrapper_id' => $time_wrapper_id,
+    'chart_title' => $chart_title,
     'filters_wrapper_id' => $filters_wrapper_id,
     'no_ui_slider' => $no_ui_slider,
     'is_collection' => $is_collection,
@@ -267,7 +336,6 @@ function islandora_cwrc_credit_visualization_highchart_form(array $form, array &
       array('type' => 'setting', 'data' => $js_settings),
       $path . '/js/noUiSlider/js/nouislider.js',
       $path . '/js/wnumb/wNumb.js',
-      $path . '/js/polyfill.js',
       $path . '/js/chart_date_handler.js',
       $path . '/js/checkboxes_handler.js',
     ),
@@ -278,7 +346,7 @@ function islandora_cwrc_credit_visualization_highchart_form(array $form, array &
   );
   $form['chart'] = $chart;
   $form['filters'] = array(
-    '#title' => t('Filter By'),
+    '#title' => t('Filter'),
     '#type' => 'fieldset',
     '#weight' => 2,
     '#collapsible' => TRUE,
@@ -291,13 +359,26 @@ function islandora_cwrc_credit_visualization_highchart_form(array $form, array &
       'class' => array($is_collection ? 'is-collection' : 'is-object'),
     ),
   );
+  $form['filters']['wrappers']['top_actions'] = array(
+    '#type' => 'container',
+    '#attributes' => array(
+      'class' => array('form-top-actions'),
+    ),
+    'apply' => array(
+      '#markup' => t('<a href="#" role="button" id="top-actions-apply-button" data-button="apply">Apply</a>'),
+    ),
+    'reset' => array(
+      '#markup' => t('<a href="#" role="button" id="top-actions-reset-button" data-button="reset">Reset</a>'),
+    ),
+  );
 
   // Users filter.
+  natcasesort($user_names);
   $form['filters']['wrappers']['users'] = array(
     '#type' => 'checkboxes',
     '#title' => t('Contributor (<span id="edit-users-select-all-toggle-wrapper"></span>)'),
     '#options' => $user_names,
-    '#weight' => 2,
+    '#weight' => 3,
     '#default_value' => $selected_users ? $selected_users : $user_ids,
   );
 
@@ -308,7 +389,7 @@ function islandora_cwrc_credit_visualization_highchart_form(array $form, array &
       'class' => array('form-items-date-range'),
     ),
     '#tree' => TRUE,
-    '#weight' => 3,
+    '#weight' => 2,
   );
   $form['filters']['wrappers']['date_range']['min'] = array(
     '#type' => 'hidden',
@@ -327,18 +408,13 @@ function islandora_cwrc_credit_visualization_highchart_form(array $form, array &
   );
 
   if ($options && $object_pids) {
-    $options = array_intersect_key($options, $object_pids);
     $form['#object_pids'] = $object_pids;
-    $document_pids = array_keys($options);
-    $document_pids = array_combine($document_pids, $document_pids);
-    $document_pids = array_filter($document_pids, static function ($pid) use ($excluded_documents) {
-      return !isset($excluded_documents[$pid]);
-    });
+    natcasesort($options);
     $form['filters']['wrappers']['document_pids'] = array(
       '#type' => 'checkboxes',
       '#title' => t('Item (<span id="edit-document-pids-select-all-toggle-wrapper"></span>)'),
       '#options' => $options,
-      '#default_value' => $document_pids,
+      '#default_value' => $document_pids ? $document_pids : array(),
       '#weight' => 1,
     );
   }
@@ -413,11 +489,7 @@ function islandora_cwrc_credit_visualization_highchart_form_submit(array $form, 
     }
 
     // Adding date filters.
-//    if (!empty($values['date_range']) && is_int($values['date_range']['min']) && is_int($values['date_range']['max'])) {
-      $query['date_range'] = $values['date_range'];
-//    }
-//    $tmp = is_int($values['date_range']['min']) ? 'boom' : 'poog';
-//    dpm($values['date_range']['min']);
+    $query['date_range'] = $values['date_range'];
 
     if ($query) {
       $form_state['redirect'] = array(current_path(), array('query' => $query));
@@ -442,15 +514,16 @@ function _islandora_cwrc_credit_visualization_get_chart_category_data($category_
   $data = array();
   $i = 0;
   foreach ($contributions as $user_id => $contribution) {
-    $data[] = array(
-      'name' => $contribution['name'],
-      'y' => isset($contribution['categories'][$category_mn]) ? $contribution['categories'][$category_mn]['count'] : 0,
-      'x' => $i,
-      'drilldown' => $is_collection,
-      'category_id' => $category_mn,
-      'user_id' => $user_id,
-    );
-    $i++;
+    $contribution_count = isset($contribution['categories'][$category_mn]) ? $contribution['categories'][$category_mn]['count'] : 0;
+      $data[] = array(
+        'name' => $contribution['name'],
+        'y' => $contribution_count,
+        'x' => $i,
+        'drilldown' => $is_collection && !empty($contribution_count),
+        'category_id' => $category_mn,
+        'user_id' => $user_id,
+      );
+      $i++;
   }
 
   return $data;

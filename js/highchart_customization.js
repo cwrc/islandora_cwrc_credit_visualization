@@ -9,14 +9,17 @@
 
   var chart_container = {},
     workflow_contributors = {},
+    workflow_selected_contributors_count = 0,
+    workflow_contributors_count = 0,
     workflow_contributions = {},
     workflow_categories = {},
+    no_ui_slider_settings = {},
     workflow_category_colors,
-    rotate_xaxis_labels = false,
     islandora_object_is_collection = false,
     islandora_object_label = '',
     time_wrapper_id = '',
     chart_date = '',
+    chart_title = '',
     main_chart_height = 600;
 
   Drupal.cwrcCredVizChart = Drupal.cwrcCredVizChart || {};
@@ -27,15 +30,16 @@
     attach: function (context, settings) {
       var module_settings = settings.islandora_cwrc_credit_visualization;
 
-      console.log(module_settings);
-
       workflow_contributions = module_settings.workflow_contributions;
       workflow_contributors = module_settings.workflow_contributors;
+      workflow_selected_contributors_count = module_settings.workflow_selected_contributors_count;
+      workflow_contributors_count = module_settings.workflow_contributors_count;
       workflow_categories = module_settings.workflow_categories;
-      rotate_xaxis_labels = module_settings.rotate_xaxis_labels;
       islandora_object_is_collection = module_settings.is_collection;
       islandora_object_label = module_settings.islandora_object_label;
       time_wrapper_id = module_settings.time_wrapper_id;
+      chart_title = module_settings.chart_title;
+      no_ui_slider_settings = module_settings.no_ui_slider;
 
       chart_container = $('.charts-highchart', context);
       chart_container.once('charts-highchart', function () {
@@ -65,12 +69,12 @@
             config.xAxis[0].labels.reserveSpace = true;
 
             config.yAxis[0].allowDecimals = false;
-            config.yAxis[0].title.text = Drupal.t('contributions count');
+            config.yAxis[0].title.text = Drupal.t('number of contributions');
             config.yAxis[1] = {
               linkedTo: 0,
               opposite: true,
               title: {
-                text: Drupal.t('contributions count')
+                text: Drupal.t('number of contributions')
               }
             };
 
@@ -79,6 +83,22 @@
             colors.push('#ff0000', '#0000ff');
             workflow_category_colors = arrayCombine(Object.keys(workflow_categories), colors);
             delete config.colors;
+
+            // Export config.
+            config.exporting = getExportingOptions(main_chart_height > 600 ? main_chart_height : 600);
+
+            // Removing zero columns.
+            for (var i = 0; i < config.series.length; i++) {
+              var category_data = config.series[i].data,
+                new_category_data = [];
+              for (var j = 0; j < category_data.length; j++) {
+                if (category_data[j].y > 0) {
+                  new_category_data.push(category_data[j]);
+                }
+              }
+              config.series[i].data = new_category_data;
+            }
+            config.title.useHTML = true;
 
             // Chart current date.
             var date = new Date(),
@@ -92,6 +112,7 @@
               };
             chart_date = date.toLocaleDateString([navigator.language, 'en-US'], date_options);
           }
+
           $(this).highcharts(config);
         }
       });
@@ -135,7 +156,7 @@
 
       var config_update = {
         title: {
-          text: Drupal.t('Contributions by <b>@user</b> to <b>@label</b> (as of <span id="@id">@date</span>)', {
+          text: Drupal.t('<span style="font-weight:bold">Credit Visualization</span> of contributions by <span style="font-weight:bold">@user</span> to <span style="font-weight:bold">@label</span> (as of <span id="@id">@date</span>)', {
             '@user': workflow_contributors[user_id],
             '@label': islandora_object_label,
             '@type': islandora_object_is_collection ? 'collection' : 'document',
@@ -158,7 +179,8 @@
             rotation: 0,
             step: 1
           }
-        }
+        },
+        exporting: getExportingOptions(default_height > height ? default_height : height),
       };
 
       chart.update(config_update);
@@ -168,21 +190,16 @@
   };
 
   Drupal.cwrcCredVizChart.Drillupall = function (e) {
-    var chart = this,
-      config_update = {
+    var chart = this;
+
+    var config_update = {
         title: {
-          text: Drupal.t('Contributions to <b>@label</b> @type (as of <span id="@id">@date</span>)', {
-            '@label': islandora_object_label,
-            '@type': islandora_object_is_collection ? 'collection' : 'document',
-            '@id': time_wrapper_id,
-            '@date': chart_date
-          })
+          text: chart_title
         },
         subtitle: {
           text: Drupal.t('Click on the columns to view user contribution(s) by document')
         },
         chart: {
-          // inverted: false,
           height: main_chart_height > 600 ? main_chart_height : 600,
         },
         xAxis: {
@@ -190,13 +207,6 @@
         }
       };
 
-    // if (rotate_xaxis_labels) {
-    //   config_update.xAxis.labels = {
-    //     align: undefined,
-    //     rotation: 90,
-    //     step: 1
-    //   };
-    // }
     chart.update(config_update);
   };
 
@@ -209,15 +219,16 @@
       if (category_id !== '<all>' && workflow_categories.hasOwnProperty(category_id)) {
         var category_name = workflow_categories[category_id];
         data = getDataCopy(category_id, user_contributions.categories).documents;
+        var filtered_data = getFilteredData(data);
         series = {
           name: workflow_categories[category_id],
           tooltip: {
-            pointFormat: '<b>' + username + '</b> - ' + category_name + ' (<b>{point.y}x</b>)'
+            pointFormat: '<b>' + username + '</b> - ' + category_name + ' (<b>{point.y}</b>)'
           },
-          data: Object.keys(data).map(function (pid) {
+          data: Object.keys(filtered_data).map(function (pid) {
             return {
-              name: data[pid].label,
-              y: data[pid].count
+              name: filtered_data[pid].label,
+              y: filtered_data[pid].count
             }
           })
         };
@@ -227,15 +238,16 @@
         for (var category in user_contributions.categories) {
           if (user_contributions.categories.hasOwnProperty(category)) {
             data = getDataCopy(category, user_contributions.categories).documents;
+            var filtered_data = getFilteredData(data);
             series.push({
               name: workflow_categories[category],
               color: workflow_category_colors[category],
               tooltip: {
-                pointFormat: '<b>' + username + '</b> - ' + workflow_categories[category] + ' (<b>{point.y}x</b>)'
+                pointFormat: '<b>' + username + '</b> - ' + workflow_categories[category] + ' (<b>{point.y}</b>)'
               },
-              data: Object.keys(data).map(function (pid) { return {
-                  name: data[pid].label,
-                  y: data[pid].count
+              data: Object.keys(filtered_data).map(function (pid) { return {
+                  name: filtered_data[pid].label,
+                  y: filtered_data[pid].count
                 }
               })
             });
@@ -251,6 +263,16 @@
     return data[property];
   }
 
+  function getFilteredData(data) {
+    var filtered_data = {};
+    for (var document_key in data) {
+      if (data.hasOwnProperty(document_key) && data[document_key].count > 0) {
+        filtered_data[document_key] = data[document_key];
+      }
+    }
+    return filtered_data;
+  }
+
   function arrayCombine(keys, values) {
     var result = [];
     for (var i = 0; i < keys.length; i++) {
@@ -259,7 +281,140 @@
     return result;
   }
 
-  Highcharts.Chart.prototype.callbacks.push(function (chart) {
+  function getExportingOptions(height) {
+    return {
+      allowHTML: true,
+      chartOptions: {
+        chart: {
+          height: height + 50,
+          marginBottom: 150,
+          events: {
+            load: function () {
+              var renderer = this.renderer,
+                title = this.title,
+                sub_title = this.subtitle,
+                legend_title_text = this.legend.title.element.querySelector('.highcharts-category-contribution-label-help-text'),
+                x = 13,
+                chart_height = this.userOptions.chart.height,
+                text_y = chart_height - 90,
+                text_line_y = chart_height - 95,
+                text_width = this.userOptions.chart.width,
+                url = location.protocol + '//' + location.host + location.pathname;
+
+              renderer.path(['M', x, text_line_y, 'L',  600, text_line_y, 'Z']).attr({
+                stroke: 'black',
+                'stroke-width': 1
+              }).add();
+
+              renderer.label(url.replace('%3A', ':'), x, text_y)
+                .css({width: text_width + 'px'})
+                .add();
+
+              // Hiding subtitle.
+              sub_title.hide();
+
+              // Legend title.
+              if (legend_title_text) {
+                legend_title_text.textContent = Drupal.t('(Grey categories are filtered)');
+              }
+
+              // Adding inline styles for the table in the header.
+              var title_element = title.element;
+              if (title_element) {
+                // Apply styles inline because stylesheets are not passed to the exported SVG.
+                H.css(title_element, {
+                  'font-size': '20px'
+                });
+                H.css(title_element.querySelector('table'), {
+                  'border-collapse': 'separate',
+                  'border-spacing': 0,
+                  background: 'white',
+                  'min-width': '100%',
+                  'font-family': 'sans-serif',
+                  'font-size': '15px',
+                  'margin-top': '15px'
+                });
+                [].forEach.call(title_element.querySelectorAll('th'), function (elem) {
+                  H.css(elem, {
+                    'line-height': 1,
+                    padding: '5px 5px',
+                    background: '#fff',
+                    color: '#333',
+                    'font-weight': 900,
+                    'text-align': 'left',
+                  });
+                });
+                [].forEach.call(title_element.querySelectorAll('table thead th'), function (elem) {
+                  H.css(elem, {
+                    'border-top': '1px solid #eee',
+                    'border-left': '1px solid #eee',
+                    'border-bottom': '3px solid #ddd',
+                  });
+                });
+                [].forEach.call(title_element.querySelectorAll('table tbody th'), function (elem) {
+                  H.css(elem, {
+                    'border-bottom': '1px solid #eee',
+                    'border-left': '1px solid #eee',
+                  });
+                });
+                [].forEach.call(title_element.querySelectorAll('td'), function (elem) {
+                  H.css(elem, {
+                    'line-height': 1,
+                    padding: '5px 5px',
+                    'border-bottom': '1px solid #eee',
+                    'border-left': '1px solid #eee',
+                    'vertical-align': 'middle',
+                  });
+                });
+                [].forEach.call(title_element.querySelectorAll('tr th:last-of-type, tr td:last-of-type'), function (elem) {
+                  H.css(elem, {
+                    'border-right': '1px solid #eee',
+                  });
+                });
+                if (title_element.querySelector('caption > span')) {
+                  H.css(title_element.querySelector('caption > span'), {
+                    'line-height': 1,
+                    padding: '5px 0',
+                    'padding-left': '5px',
+                    'padding-right': '5px',
+                    'border-bottom': '1px solid #eee',
+                    display: 'block',
+                    background: '#fafafa',
+                    'text-align': 'left',
+                    'border-right': '1px solid #eee',
+                    'border-left': '1px solid #eee',
+                  });
+              }
+                H.css(title_element.querySelector('caption'), {
+                  'border-bottom': 'none',
+                  background: 'transparent',
+                  'caption-side': 'bottom',
+                  padding: 0,
+                });
+              }
+            }
+          }
+        }
+      },
+      tableCaption: false,
+      buttons: {
+        contextButton: {
+          menuItems: [
+            'viewFullscreen',
+            'printChart',
+            'separator',
+            'downloadPNG',
+            'downloadJPEG',
+            'downloadPDF',
+            'separator',
+            'viewData',
+          ]
+        }
+      }
+    };
+  }
+
+  H.Chart.prototype.callbacks.push(function (chart) {
     // This event get triggered after the drilldown, removing the drilling-down
     // class here.
     H.addEvent(chart.container, 'click', function (e) {

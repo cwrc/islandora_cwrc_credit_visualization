@@ -9,13 +9,47 @@
   grid-gap: 10px;
   grid-auto-flow: dense;
 }
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-top-actions {
+  grid-row: 1;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-top-actions a {
+  font-weight: 900;
+  color: #fff;
+  background-color: #67152b;
+  font-size: 11.5px;
+  line-height: 16px;
+  padding: .75em 1.3em;
+  display: inline-block;
+  text-decoration: none;
+  -webkit-transition: all 0.3s ease-out;
+  transition: all 0.3s ease-out;
+  -webkit-border-radius: 5px;
+  -moz-border-radius: 5px;
+  border-radius: 5px;
+  cursor: pointer;
+  user-select: none;
+  white-space: pre;
+  align-items: flex-start;
+  text-align: center;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-top-actions a:focus {
+  outline-offset: 0;
+  outline: rgba(0, 103, 244, 0.247) auto 5px;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-top-actions a:hover {
+  background-color: #490f1f;
+}
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-top-actions a + a {
+  margin-left: 1em;
+}
 #cwrc-islandora-credit-visualization-highchart-filters-wrappers.is-collection .form-item-document-pids {
-  grid-row: 1/4;
+  grid-row: 2/5;
   grid-column: 1;
 }
 #cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-items-date-range {
-  grid-row: 1;
+  grid-row: 2;
 }
+#cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-top-actions,
 #cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-actions {
   grid-column: 1/-1;
 }
@@ -24,10 +58,53 @@
 }
 #cwrc-islandora-credit-visualization-highchart-filters-wrappers.is-collection .form-item-users {
   margin-top: 15px;
+  position: relative;
+  z-index: 1;
 }
 #cwrc-islandora-credit-visualization-highchart-filters-wrappers .form-items-date-range > label {
   margin-bottom: 14px;
 }
 #cwrc-islandora-credit-visualization-highchart-filters-wrappers > .form-item {
   margin-bottom: 0;
+}
+.highcharts-title {
+  width: calc(100% - 35px);
+}
+.section-content .block table.table--chart-title,
+table.table--chart-title {
+  margin-top: 15px;
+  margin-bottom: 15px;
+  max-width: 720px;
+}
+.highcharts-data-table table caption.highcharts-table-caption {
+  display: none;
+}
+.highcharts-data-table table tbody th,
+table.table--chart-title tbody th {
+  border-bottom: 1px solid #eee;
+}
+table.table--chart-title th,
+table.table--chart-title td,
+.highcharts-data-table > table th,
+.highcharts-data-table > table td,
+table.table--chart-title caption > span {
+  line-height: 1;
+  padding: 5px 0;
+}
+table.table--chart-title thead tr th:nth-child(1),
+table.table--chart-title tbody tr th:nth-child(1),
+table.table--chart-title tbody tr td:nth-child(1) {
+  width: 155px;
+}
+table.table--chart-title caption {
+  padding: 0;
+  background: transparent;
+  line-height: 1;
+}
+table.table--chart-title caption > span {
+  padding-left: 5px;
+  padding-right: 5px;
+  display: block;
+  background: #fafafa;
+  text-align: left;
 }

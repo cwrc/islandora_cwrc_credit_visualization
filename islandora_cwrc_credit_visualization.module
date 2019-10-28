@@ -28,8 +28,8 @@ function islandora_cwrc_credit_visualization_menu() {
  * Implements hook_menu_alter().
  */
 function islandora_cwrc_credit_visualization_menu_alter(&$items) {
-  if (!empty($items['islandora/object/%islandora_object/view/cwrc_credit_visualization'])) {
-    $credit_item = &$items['islandora/object/%islandora_object/view/cwrc_credit_visualization'];
+  if (!empty($items['islandora/object/%islandora_object/view/credviz'])) {
+    $credit_item = &$items['islandora/object/%islandora_object/view/credviz'];
     $credit_item['page callback'] = 'drupal_get_form';
     $credit_item['page arguments'] = array('islandora_cwrc_credit_visualization_highchart_form', 2);
     $credit_item['file'] = 'includes/highchart.inc';
@@ -49,14 +49,14 @@ function islandora_cwrc_credit_visualization_cwrc_visualization_info() {
 
   $tools = array();
 
-  $tools['cwrc_credit_visualization'] = array(
-      'label' => 'Credits',
+  $tools['credviz'] = array(
+      'label' => 'CredViz',
       'available cmodels' => _islandora_cwrc_credit_visualization_available_cmodels(),
-      'url pattern' => $base_url.'/islandora/object/%object_pid%/cwrc_credit_visualization',
+      'url pattern' => $base_url.'/islandora/object/%object_pid%/credviz',
       'weight' => 30,
       'search display' => 'credit',
       'search hide facets' => TRUE,
-      'bookmark path' => 'islandora-bookmark/listid/%list_id%/cwrc_credit_visualization',
+      'bookmark path' => 'islandora-bookmark/listid/%list_id%/credviz',
     );
 
   return $tools;
@@ -91,6 +91,7 @@ function islandora_cwrc_credit_visualization_library_alter(&$libraries, $module)
     // add the drilldown callback if needed.
     $path = drupal_get_path('module', 'islandora_cwrc_credit_visualization');
     $libraries['charts_highcharts']['js'] = array(
+      array('data' => $path . '/js/utilities.js', 'type' => 'file'),
       array('data' => $path . '/js/highchart_customization.js', 'type' => 'file'),
     );
   }
@@ -110,14 +111,18 @@ function islandora_cwrc_credit_visualization_chart_object_credviz_alter(&$chart)
  * Implements hook_chart_definition_CHART_ID_alter() for object_credviz.
  */
 function islandora_cwrc_credit_visualization_chart_definition_object_credviz_alter(&$definition, $chart) {
+  $definition['title']['align'] = 'left';
   if ($chart['#is_collection']) {
-    $definition['subtitle']['text'] = t('Click on the columns to view user contribution(s) by document');
+    $definition['subtitle']['text'] = t('Click on the row labels to view user contributions by document.');
   }
-  $definition['tooltip']['pointFormat'] = '<span style="color:{point.color}">●</span> {series.name} (<b>{point.y}x</b>)<br/>';
+  $definition['tooltip']['pointFormat'] = '<span style="color:{point.color}">●</span> {series.name} (<b>{point.y}</b>)<br/>';
   $categories = _islandora_cwrc_credit_visualization_possible_categories();
   $categories_by_label = array_flip($categories);
+  $i = 0;
   foreach ($definition['series'] as &$category) {
+    $category['index'] = $i;
     $category['category_key'] = $categories_by_label[$category['name']];
+    $i++;
   }
   unset($category);
 
@@ -127,6 +132,9 @@ function islandora_cwrc_credit_visualization_chart_definition_object_credviz_alt
       'series' => array(),
     );
   }
+
+  // Adding legend title
+  $definition['legend']['title']['text'] = t('Contribution category<br/><span class="highcharts-category-contribution-label-help-text" style="font-size: 9px; color: #666; font-weight: normal">(Click to filter)</span>');
 }
 
 /**

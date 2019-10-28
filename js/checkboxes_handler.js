@@ -37,6 +37,15 @@
         }
       });
 
+      // Top actions fake buttons to trigger submit/reset using them.
+      $('[id^=top-actions-]').on('click touch', function (e) {
+        var button = $(this).data('button');
+        e.preventDefault();
+        if (button && (button === 'reset' || button === 'apply')) {
+          $('[id^=edit-' + button + ']', '#cwrc-islandora-credit-visualization-highchart-filters-wrappers', context).trigger('click');
+        }
+      });
+
       function filterByUsers(chart, series) {
         var checked = [];
         // Getting checked users.

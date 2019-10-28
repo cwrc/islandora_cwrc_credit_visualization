@@ -40,12 +40,12 @@
         // Snap to 1-unit increments.
         step: 1,
         range: {
-          min: timestamp(no_ui_slider_settings.range.min),
-          max: timestamp(no_ui_slider_settings.range.max)
+          min: Drupal.islandoraCwrcCreditVisualization.timestamp(no_ui_slider_settings.range.min),
+          max: Drupal.islandoraCwrcCreditVisualization.timestamp(no_ui_slider_settings.range.max)
         },
         start: [
-          timestamp(no_ui_slider_settings.start.begin),
-          timestamp(no_ui_slider_settings.start.end),
+          Drupal.islandoraCwrcCreditVisualization.timestamp(no_ui_slider_settings.start.begin),
+          Drupal.islandoraCwrcCreditVisualization.timestamp(no_ui_slider_settings.start.end),
         ],
         format: wNumb({
           decimals: 0
@@ -57,7 +57,7 @@
           format: {
             to: function (value) {
               var date = new Date(value);
-              return formatDate(date);
+              return Drupal.islandoraCwrcCreditVisualization.formatDate(date);
             },
             from: function (value) {
               return value.getTime();
@@ -68,7 +68,7 @@
       dateFilterSlider.noUiSlider.on('update', function (values, handle) {
         var value = values[handle];
         // Update the date display for the user.
-        dateFilterDisplays[handle].innerHTML = formatDate(new Date(+value));
+        dateFilterDisplays[handle].innerHTML = Drupal.islandoraCwrcCreditVisualization.formatDate(new Date(+value));
         // Update hidden min and max value.
         var value_input = value / 1000;
         if (handle) {
@@ -78,21 +78,6 @@
           dateMinInput.value = value_input.toFixed(0);
         }
       });
-
-      /**
-       * Date formatter.
-       *
-       * @param date
-       */
-      function formatDate(date) {
-        var formattedMonth = ('0' + (date.getMonth() + 1)).slice(-2),
-          formattedDate = ('0' + date.getDate()).slice(-2);
-        return formattedMonth + '/' + formattedDate + '/' + date.getFullYear();
-      }
-
-      function timestamp(str) {
-        return new Date(str).getTime();
-      }
     }
   };
 })(jQuery, Drupal);

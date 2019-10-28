@@ -1,8 +1,30 @@
 /**
  * @file
- * Polyfilling some of the objects methods not supported by browsers.
+ * Utilities/helpers js functions.
  */
 
+(function ($, Drupal) {
+  Drupal.islandoraCwrcCreditVisualization = Drupal.islandoraCwrcCreditVisualization || {};
+
+  /**
+   * Date formatter.
+   *
+   * @param date
+   */
+  Drupal.islandoraCwrcCreditVisualization.formatDate = function (date) {
+    var formattedMonth = ('0' + (date.getMonth() + 1)).slice(-2),
+      formattedDate = ('0' + date.getDate()).slice(-2);
+    return formattedMonth + '/' + formattedDate + '/' + date.getFullYear();
+  };
+
+  Drupal.islandoraCwrcCreditVisualization.timestamp = function (str) {
+    return new Date(str).getTime();
+  }
+})(jQuery, Drupal);
+
+/**
+ * Polyfilling some of the objects methods not supported by browsers.
+ */
 // From https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/keys
 if (!Object.keys) {
   Object.keys = (function () {
